@@ -399,7 +399,7 @@ const JLONG = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'
 const WORKED = ['matin','soir','jour','nuit','journee','form'];
 const CATS = {matin:'Matin',soir:'Soir',jour:'Jour 12 h',nuit:'Nuit',journee:'Journée (cadre)',repos:'Repos',recup:'Récupération',conge:'Congé / absence',form:'Formation'};
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbzjbg7UQH6mm3LZwMwwXxDozPXeMaeYhqT_C0VGvHwGHNup4rj2AkuaiFAacE5hiwXw_w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwZyn4ngUpQ06QFSmCEANfX3Ft6N881AxkSzi2lF_BQxS-TT72O_QC053uMCLs9AibXpA/exec';
 let S = {me:null, admin:false, etab:{nom:'',service:'',uf:'',acces:''}, codes:[], agents:[], allAgents:[], plan:{}, notes:{}, requests:[], notifs:[], published:{}, history:[], mins:{IDE:4,AS:0}, minRepos:12, tol:5, contact:'soignant.pratik@gmail.com', view:null, y:new Date().getFullYear(), m:new Date().getMonth()};
 let TOKEN = null; try{ TOKEN = localStorage.getItem('paramed-token'); }catch(e){}
 function setToken(t){ TOKEN=t; try{ t?localStorage.setItem('paramed-token',t):localStorage.removeItem('paramed-token'); }catch(e){} }
