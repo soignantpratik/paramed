@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PARAMED</title>
+<meta name="description" content="PARAMED — le planning des équipes soignantes.">
+<meta name="theme-color" content="#FBF3EA">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PARAMED">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Caveat:wght@500;700&display=swap">
+<style>
+/* Layout : barre d'app crème + onglets, grille planning plein-largeur façon tableau RH, panneaux de contrôle dessous */
+:root{
+  --bg:#FBF3EA; --surface:#FFFDF9; --surface-2:#F5E9DD; --ink:#22344F; --navy:#2F547F; --navy-ink:#FFFDF9;
+  --peach:#EBAC8D; --peach-deep:#B8653F; --peach-soft:#F9E2D5; --line:#EAD9C9; --muted:#6C778A; --weekend:#F2E1D2;
+  --ok:#2F7D4F; --ok-soft:#DCEFE2; --warn:#A06312; --warn-soft:#FBEACB; --bad:#B83A30; --bad-soft:#F8DAD6;
+  --k-matin-bg:#FFF1BF; --k-matin-fg:#5E4700;
+  --k-soir-bg:#F9CDBA; --k-soir-fg:#6E2A12;
+  --k-jour-bg:#D3E2F4; --k-jour-fg:#1D3B62;
+  --k-nuit-bg:#CFCBEF; --k-nuit-fg:#2A2468;
+  --k-journee-bg:#FFF8DC; --k-journee-fg:#584800;
+  --k-repos-bg:#CDEBD2; --k-repos-fg:#1C5229;
+  --k-recup-bg:#CBEBF0; --k-recup-fg:#164F59;
+  --k-conge-bg:#8ED3A2; --k-conge-fg:#0E3F1C;
+  --k-form-bg:#F5CBE3; --k-form-fg:#651B49;
+  --f-display:'Archivo',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-hand:'Caveat','Segoe Print','Bradley Hand',cursive;
+  --shadow:0 1px 0 rgba(47,84,127,.06),0 8px 24px -12px rgba(47,84,127,.25);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111923; --surface:#18222F; --surface-2:#1F2B3A; --ink:#E7EDF5; --navy:#A9C6EA; --navy-ink:#111923;
+  --peach:#EBAC8D; --peach-deep:#F0BCA2; --peach-soft:#3A2922; --line:#2B394B; --muted:#93A0B3; --weekend:#202A37;
+  --ok:#73C893; --ok-soft:#173424; --warn:#E8B45E; --warn-soft:#3A2C12; --bad:#F08A80; --bad-soft:#3E1D1A;
+  --k-matin-bg:#4A3E10; --k-matin-fg:#FFE79A; --k-soir-bg:#55301F; --k-soir-fg:#FFD0BB;
+  --k-jour-bg:#22395A; --k-jour-fg:#CFE1FA; --k-nuit-bg:#2F2A5A; --k-nuit-fg:#DAD6FF;
+  --k-journee-bg:#3F3814; --k-journee-fg:#FFF0B0; --k-repos-bg:#1E4228; --k-repos-fg:#BFEBC9;
+  --k-recup-bg:#18414A; --k-recup-fg:#BDEBF2; --k-conge-bg:#2C6B3E; --k-conge-fg:#E1F7E7; --k-form-bg:#4E2140; --k-form-fg:#FBD0EA;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#111923; --surface:#18222F; --surface-2:#1F2B3A; --ink:#E7EDF5; --navy:#A9C6EA; --navy-ink:#111923;
+  --peach:#EBAC8D; --peach-deep:#F0BCA2; --peach-soft:#3A2922; --line:#2B394B; --muted:#93A0B3; --weekend:#202A37;
+  --ok:#73C893; --ok-soft:#173424; --warn:#E8B45E; --warn-soft:#3A2C12; --bad:#F08A80; --bad-soft:#3E1D1A;
+  --k-matin-bg:#4A3E10; --k-matin-fg:#FFE79A; --k-soir-bg:#55301F; --k-soir-fg:#FFD0BB;
+  --k-jour-bg:#22395A; --k-jour-fg:#CFE1FA; --k-nuit-bg:#2F2A5A; --k-nuit-fg:#DAD6FF;
+  --k-journee-bg:#3F3814; --k-journee-fg:#FFF0B0; --k-repos-bg:#1E4228; --k-repos-fg:#BFEBC9;
+  --k-recup-bg:#18414A; --k-recup-fg:#BDEBF2; --k-conge-bg:#2C6B3E; --k-conge-fg:#E1F7E7; --k-form-bg:#4E2140; --k-form-fg:#FBD0EA;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+.sync{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+.sync.err{color:var(--bad)}
+.splash{min-height:80vh;display:grid;place-items:center;text-align:center;color:var(--muted)}
+.splash .bigword{font-weight:900;font-size:30px;letter-spacing:.06em;color:var(--navy)}
+html.busy body{cursor:progress}
+textarea.input{min-height:90px;font:inherit;padding:10px 12px;resize:vertical}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-display);font-size:14px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--peach-deep);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.hand{font-family:var(--f-hand)}
+h1,h2,h3{text-wrap:balance;margin:0}
+.muted{color:var(--muted)}
+.star{display:inline-block;width:14px;height:14px;vertical-align:-2px}
+
+/* ---------- Logo ---------- */
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo svg.mark{width:38px;height:38px;flex:none}
+.logo .word{display:flex;flex-direction:column;line-height:1}
+.logo .word b{font-weight:900;font-size:22px;letter-spacing:.04em;color:var(--navy)}
+.logo .word i{font-style:normal;font-family:var(--f-hand);font-size:16px;color:var(--peach-deep);margin-top:2px}
+
+/* ---------- Login ---------- */
+.login{min-height:100%;display:grid;place-items:center;padding-block:48px}
+.login-card{width:min(440px,100%);background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:32px 28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.login-card .cloud{position:absolute;inset:-60px -80px auto auto;width:240px;height:200px;background:radial-gradient(closest-side,var(--peach-soft),transparent);pointer-events:none}
+.login-hero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin-bottom:22px;position:relative}
+.login-hero svg.mark{width:72px;height:72px}
+.login-hero .bigword{font-weight:900;font-size:40px;letter-spacing:.06em;color:var(--navy);line-height:1}
+.wave{display:block;width:150px;height:10px;margin:2px auto 0}
+.login-hero .tag{font-family:var(--f-hand);font-size:22px;color:var(--peach-deep)}
+.login-hero .who{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.input,select.input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);min-height:42px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:999px;border:1px solid transparent;font-weight:700;min-height:40px;white-space:nowrap}
+.btn-primary{background:var(--navy);color:var(--navy-ink)}
+.btn-peach{background:var(--peach);color:#3a1d0f}
+.btn-ghost{background:transparent;border-color:var(--line)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-sm{padding:5px 12px;min-height:32px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-block{width:100%}
+.demo-sep{display:flex;align-items:center;gap:10px;margin:18px 0 10px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.demo-sep::before,.demo-sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.demo-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.linkish{background:none;border:0;color:var(--peach-deep);font-weight:700;padding:0;text-decoration:underline;text-underline-offset:3px}
+.copyright{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+
+/* ---------- App bar ---------- */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 0;border-bottom:1px solid var(--line)}
+.appbar-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ctx{display:flex;flex-direction:column;line-height:1.2;padding-left:14px;border-left:1px solid var(--line);min-width:0}
+.ctx b{font-size:14px}
+.ctx span{font-size:12px;color:var(--muted)}
+.spacer{flex:1}
+.iconbtn{position:relative;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.iconbtn svg{width:20px;height:20px}
+.badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--peach-deep);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.user{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.avatar{border:0;padding:0;width:32px;height:32px;border-radius:50%;background:var(--peach-soft);color:var(--peach-deep);display:grid;place-items:center;font-weight:800;font-size:12px}
+.user small{display:block;color:var(--muted);font-size:11px;line-height:1}
+.user b{font-size:13px;line-height:1.2}
+.tabs{display:flex;gap:2px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+.tab{background:none;border:0;padding:10px 14px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--peach)}
+.tab .pill{background:var(--peach);color:#3a1d0f;font-size:11px;border-radius:9px;padding:0 6px}
+
+/* ---------- Notifications ---------- */
+.notif-pop{position:absolute;right:0;top:48px;width:min(360px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:8px;z-index:20}
+.notif-pop h4{margin:6px 8px 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.notif{display:flex;gap:10px;padding:10px;border-radius:10px}
+.notif.unread{background:var(--peach-soft)}
+.notif .dot{width:8px;height:8px;border-radius:50%;background:var(--peach-deep);margin-top:6px;flex:none}
+.notif.read .dot{background:var(--line)}
+.notif p{margin:0;font-size:13px}
+.notif time{font-size:11px;color:var(--muted)}
+
+/* ---------- Page ---------- */
+main{padding-top:20px}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.page-head h1{font-size:28px;font-weight:900;letter-spacing:-.01em;color:var(--navy);line-height:1.05}
+.page-head .sub{font-family:var(--f-hand);font-size:20px;color:var(--peach-deep);line-height:1}
+.monthnav{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.monthnav button{width:34px;height:34px;border-radius:50%;border:0;background:none;font-size:18px;font-weight:700}
+.monthnav button:hover{background:var(--surface-2)}
+.monthnav b{min-width:130px;text-align:center;font-weight:800;text-transform:capitalize}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:999px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink)}
+.brushbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
+.brushbar .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+.chip{border:1.5px solid transparent;border-radius:8px;padding:3px 8px;font-weight:800;font-size:12px;letter-spacing:.02em;min-height:28px}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--surface) inset}
+.chip.erase{background:var(--surface-2);color:var(--muted)}
+.k-matin{background:var(--k-matin-bg);color:var(--k-matin-fg)}
+.k-soir{background:var(--k-soir-bg);color:var(--k-soir-fg)}
+.k-jour{background:var(--k-jour-bg);color:var(--k-jour-fg)}
+.k-nuit{background:var(--k-nuit-bg);color:var(--k-nuit-fg)}
+.k-journee{background:var(--k-journee-bg);color:var(--k-journee-fg)}
+.k-repos{background:var(--k-repos-bg);color:var(--k-repos-fg)}
+.k-recup{background:var(--k-recup-bg);color:var(--k-recup-fg)}
+.k-conge{background:var(--k-conge-bg);color:var(--k-conge-fg)}
+.k-form{background:var(--k-form-bg);color:var(--k-form-fg)}
+
+.banner{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;margin-bottom:12px;font-size:13px}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.banner.ok{background:var(--ok-soft);color:var(--ok)}
+.banner.info{background:var(--peach-soft);color:var(--ink)}
+.banner b{display:block}
+
+/* ---------- Grid ---------- */
+.grid-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
+.grid th,.grid td{border-bottom:1px solid var(--line);text-align:center;padding:0}
+.grid thead th{background:var(--surface);font-weight:700;color:var(--muted)}
+.grid .wk th{font-size:11px;letter-spacing:.06em;color:var(--navy);font-weight:800;padding:8px 0 4px;border-left:2px solid var(--line)}
+.grid .wk th.first{border-left:0}
+.grid .days th{padding:2px 0 6px;min-width:38px}
+.grid .days th span{display:block;font-size:10px;text-transform:uppercase}
+.grid .days th b{display:block;font-size:13px;color:var(--ink)}
+.grid .we{background:var(--weekend)!important}
+.grid .wkstart{border-left:2px solid var(--line)}
+.grid th.name{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:6px 10px;min-width:190px;max-width:220px;border-right:1px solid var(--line)}
+.grid tbody th.name{font-weight:600;color:var(--ink)}
+.grid th.name .g{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:6px;background:var(--surface-2);color:var(--navy);margin-left:6px}
+.grid th.name small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+.grid tr.group th{background:var(--surface-2);text-align:left;padding:6px 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);position:sticky;left:0}
+.grid tr.group td{background:var(--surface-2)}
+.cell{width:100%;min-width:38px;height:34px;border:0;border-radius:0;font-weight:800;font-size:11px;letter-spacing:.01em;position:relative;background:transparent;padding:0 1px}
+.cell:hover{outline:2px solid var(--navy);outline-offset:-2px;z-index:1}
+.cell.empty{color:var(--line)}
+.cell .note{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--peach-deep)}
+.cell.ro{cursor:default}.cell.ro:hover{outline:0}
+.cell.me{box-shadow:inset 0 0 0 2px var(--peach-deep)}
+.grid td.cnt{padding:0 8px;white-space:nowrap;font-size:12px;border-left:1px solid var(--line)}
+.grid td.cnt:first-of-type{border-left:2px solid var(--line)}
+.grid .days th.fer span{color:var(--peach-deep);font-weight:800}
+.grid .days th.fer b{color:var(--peach-deep)}
+.cell.restbad::after{content:"";position:absolute;left:3px;right:3px;bottom:2px;height:3px;border-radius:2px;background:var(--bad)}
+.grid tfoot tr.effmin td,.grid tfoot tr.effmin th{color:var(--ink);font-size:12px}
+.grid tfoot tr.effmin td.under{background:var(--bad-soft)!important;color:var(--bad);font-weight:900}
+.day .fer{font-size:10px;font-weight:800;color:var(--peach-deep);text-transform:uppercase;letter-spacing:.04em}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch:last-child{border-bottom:0}
+.switch input{width:20px;height:20px;accent-color:var(--navy)}
+.rules{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:12px;font-size:12px;color:var(--muted);align-items:center}
+.rules label{display:inline-flex;gap:6px;align-items:center}
+.rules input{width:60px;min-height:30px;padding:3px 6px}
+.cyc{background:var(--bg);border-radius:12px;padding:12px;display:grid;gap:10px}
+.cyc textarea{width:100%;min-height:64px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.grid tfoot th,.grid tfoot td{background:var(--surface-2);font-size:11px;padding:5px 0;color:var(--muted);font-weight:700}
+.grid tfoot th.name{background:var(--surface-2)}
+.grid tr.mine th.name{background:var(--peach-soft)}
+.st{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 8px;font-weight:800;font-size:11px}
+.st.ok{background:var(--ok-soft);color:var(--ok)}
+.st.warn{background:var(--warn-soft);color:var(--warn)}
+.st.bad{background:var(--bad-soft);color:var(--bad)}
+.st.na{background:var(--surface-2);color:var(--muted)}
+
+/* ---------- Panels ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;margin-top:16px}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.panel h2{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.panel h2 .hand{font-size:18px;color:var(--peach-deep);font-weight:700}
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.alerts li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:var(--bg);font-size:13px}
+.alerts li .st{flex:none;margin-top:1px}
+.tbl-wrap{overflow-x:auto}
+table.tbl{border-collapse:collapse;width:100%;font-size:13px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line);font-weight:700;white-space:nowrap}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl input.input,.tbl select.input{min-height:34px;padding:5px 8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* ---------- Popover ---------- */
+.pop{position:absolute;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;width:290px}
+.pop h5{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700}
+.pop h5 b{color:var(--ink)}
+.pop .codes{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.pop .codes .chip{width:100%}
+.pop .acts{display:flex;gap:6px;margin-top:10px;align-items:center}
+.pop .acts input{flex:1;min-width:0;min-height:32px;padding:4px 8px}
+
+/* ---------- Agent views ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.kpi small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.kpi b{font-size:26px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}
+.kpi b em{font-style:normal;font-size:14px;color:var(--muted);font-weight:600}
+.kpi .st{margin-top:4px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .dh{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;text-align:center;padding-bottom:2px}
+.cal .wn{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.06em;margin-top:6px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-height:84px;padding:7px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.day.out{visibility:hidden}
+.day.we{background:var(--weekend)}
+.day .dn{font-weight:800;font-size:13px}
+.day .code{border-radius:7px;padding:3px 6px;font-weight:800;font-size:12px;align-self:flex-start}
+.day .hrs{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day.sel{outline:2px solid var(--peach-deep)}
+@media (max-width:560px){.day{min-height:62px;padding:5px}.day .hrs{display:none}.day .code{font-size:10px;padding:2px 4px}}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.swap{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center;margin:12px 0}
+.swap .side{background:var(--bg);border-radius:12px;padding:10px 12px;min-width:0}
+.swap .side small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.swap .arrow{font-size:20px;color:var(--peach-deep);font-weight:900}
+.req{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.req-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.req-head b{font-size:14px}
+.req .checks{display:flex;gap:6px;flex-wrap:wrap}
+.req .acts{display:flex;gap:8px;flex-wrap:wrap}
+.reqs{display:flex;flex-direction:column;gap:10px}
+.empty-note{padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+
+/* ---------- Charte ---------- */
+.brand-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.brand-tile{border-radius:18px;padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:220px;border:1px solid var(--line)}
+.brand-tile.cream{background:#FBF3EA;color:#2F547F}
+.brand-tile.navy{background:#2F547F;color:#FBF3EA}
+.brand-tile.peach{background:#EBAC8D;color:#2F547F}
+.brand-tile .bw{font-weight:900;font-size:36px;letter-spacing:.06em;line-height:1}
+.brand-tile .bt{font-family:var(--f-hand);font-size:22px}
+.sw{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.sw div{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.sw i{display:block;height:64px}
+.sw p{margin:0;padding:8px 10px;font-size:12px}
+.sw p b{display:block;font-size:13px}
+.type-sample{display:grid;gap:10px}
+.type-sample .a{font-weight:900;font-size:34px;color:var(--navy);letter-spacing:.02em;line-height:1}
+.type-sample .c{font-family:var(--f-hand);font-size:30px;color:var(--peach-deep);line-height:1}
+
+/* ---------- Print preview ---------- */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(17,25,35,.55);display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.overlay-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;color:#fff;margin-bottom:10px;flex-wrap:wrap}
+.overlay-bar p{margin:0;font-size:13px}
+.overlay-scroll{overflow:auto;flex:1}
+.sheet{background:#fff;color:#1b2533;width:1123px;min-height:794px;margin:0 auto;padding:30px 34px;font-family:var(--f-display);border-radius:4px}
+.sheet .sh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2F547F;padding-bottom:10px;margin-bottom:12px}
+.sheet .sh h2{font-size:18px;font-weight:900;color:#2F547F;letter-spacing:.02em}
+.sheet .sh p{margin:2px 0 0;font-size:12px;color:#55606f}
+.sheet table{border-collapse:collapse;width:100%;font-size:10px}
+.sheet th,.sheet td{border:1px solid #c9ced6;text-align:center;padding:3px 1px}
+.sheet th.n,.sheet td.n{text-align:left;padding-left:6px;white-space:nowrap}
+.sheet .w{background:#f1ece6}
+.sheet .foot{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;color:#55606f;gap:20px}
+.sheet .lg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;font-size:10px}
+.sheet .lg b{display:inline-block;min-width:34px;padding:1px 4px;border-radius:3px;text-align:center;margin-right:3px}
+.sheet .pk-matin{background:#FFF1BF}.sheet .pk-soir{background:#F9CDBA}.sheet .pk-jour{background:#D3E2F4}.sheet .pk-nuit{background:#CFCBEF}.sheet .pk-journee{background:#FFF8DC}.sheet .pk-repos{background:#CDEBD2}.sheet .pk-recup{background:#CBEBF0}.sheet .pk-conge{background:#8ED3A2}.sheet .pk-form{background:#F5CBE3}
+@media print{body *{visibility:hidden}.overlay{position:static;background:none;padding:0}.overlay-scroll{overflow:visible}.sheet,.sheet *{visibility:visible}.sheet{position:absolute;left:0;top:0;width:100%;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4 landscape;margin:8mm}}
+
+.overlay.tuto{align-items:center;justify-content:center;overflow:auto}
+.tuto-card{background:var(--surface);color:var(--ink);border-radius:22px;padding:24px 22px;width:min(420px,100%);box-shadow:var(--shadow);margin:auto}
+.tuto-steps{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px}
+.tuto-steps li{display:flex;gap:12px;align-items:flex-start;background:var(--bg);border-radius:14px;padding:10px 12px}
+.tuto-steps .tn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--peach);color:#3a1d0f;font-weight:900;display:grid;place-items:center}
+.tuto-steps p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--navy-ink);padding:10px 18px;border-radius:999px;font-weight:700;z-index:50;box-shadow:var(--shadow)}
+.foot-note{margin-top:28px;text-align:center;font-size:12px;color:var(--muted)}
+@media (max-width:640px){.ctx{display:none}.page-head h1{font-size:24px}.user .who{display:none}.swap{grid-template-columns:minmax(0,1fr)}.swap .arrow{transform:rotate(90deg);justify-self:center}.row2{grid-template-columns:1fr}}
+.tab svg,.tab .ts{display:none}
+@media (max-width:700px){
+  .appbar{padding-block:10px 10px}
+  .logo .word i{display:none}
+  .logo .word b{font-size:19px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);margin:0;gap:0;overflow:visible;justify-content:space-around;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));box-shadow:0 -8px 24px -16px rgba(47,84,127,.35)}
+  .tab{flex:1;min-width:0;flex-direction:column;gap:3px;font-size:10.5px;padding:5px 2px;border-bottom:0;position:relative;border-radius:12px}
+  .tab svg{display:block;width:22px;height:22px}
+  .tab .tl{display:none}.tab .ts{display:block}
+  .tab[aria-selected="true"]{background:var(--peach-soft);color:var(--navy)}
+  .tab .pill{position:absolute;top:1px;left:calc(50% + 6px)}
+  body{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  main{padding-top:14px}
+  .page-head{align-items:stretch;gap:10px}
+  .page-head>div:first-child{width:100%}
+  .page-head .monthnav{width:100%;justify-content:space-between}
+  .page-head .spacer{display:none}
+  .page-head>.btn{flex:1}
+  .brushbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .brushbar .muted{display:none}
+  .appbar-top{flex-wrap:nowrap;gap:10px}
+  .user{padding:3px;border:0;background:none}.user .btn{display:none}.avatar{width:38px;height:38px;font-size:13px}
+  .grid th.name{min-width:92px;max-width:100px;padding:5px 6px;font-size:11px;line-height:1.25}
+  .grid th.name .g{display:none}
+  .grid .days th{min-width:36px}
+  .cell{height:42px;min-width:36px;font-size:10.5px}
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .kpi{padding:10px}.kpi b{font-size:18px}.kpi b em{font-size:11px}.kpi small{font-size:9.5px;letter-spacing:.04em}
+  .pop.sheetpop{position:fixed;left:0;right:0;bottom:0;top:auto!important;width:auto;border-radius:20px 20px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -12px 40px -10px rgba(17,25,35,.45)}
+  .pop.sheetpop::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 12px}
+  .pop.sheetpop .codes{grid-template-columns:repeat(4,1fr);gap:8px}
+  .pop.sheetpop .chip{min-height:42px;font-size:13px}
+  .pop.sheetpop .acts input,.pop.sheetpop .acts .btn{min-height:42px}
+  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .foot-note{margin-top:20px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const JL = ['D','L','M','M','J','V','S'];
+const JLONG = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const WORKED = ['matin','soir','jour','nuit','journee','form'];
+const CATS = {matin:'Matin',soir:'Soir',jour:'Jour 12 h',nuit:'Nuit',journee:'Journée (cadre)',repos:'Repos',recup:'Récupération',conge:'Congé / absence',form:'Formation'};
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbzjbg7UQH6mm3LZwMwwXxDozPXeMaeYhqT_C0VGvHwGHNup4rj2AkuaiFAacE5hiwXw_w/exec';
+let S = {me:null, admin:false, etab:{nom:'',service:'',unite:'',uf:'',acces:''}, codes:[], agents:[], allAgents:[], plan:{}, notes:{}, requests:[], notifs:[], published:{}, history:[], mins:{IDE:4,AS:0}, minRepos:12, tol:5, contact:'soignant.pratik@gmail.com', view:null, y:new Date().getFullYear(), m:new Date().getMonth()};
+let TOKEN = null; try{ TOKEN = localStorage.getItem('paramed-token'); }catch(e){}
+function setToken(t){ TOKEN=t; try{ t?localStorage.setItem('paramed-token',t):localStorage.removeItem('paramed-token'); }catch(e){} }
+async function api(action, data){
+  let res;
+  try{ res = await fetch(API_URL, {method:'POST', body: JSON.stringify(Object.assign({action, token:TOKEN}, data||{}))}); }
+  catch(e){ throw new Error('Pas de connexion internet. Réessaie dans un instant.'); }
+  let j; try{ j = await res.json(); }catch(e){ throw new Error('Le serveur ne répond pas correctement.'); }
+  if(!j.ok){ if(/Session expirée|Connexion requise|Compte introuvable/.test(j.error||'')){ setToken(null); S.me=null; render(); } throw new Error(j.error||'Erreur inconnue'); }
+  return j;
+}
+function applyState(j){
+  if(!j || !j.agents) return;
+  ['me','admin','etab','codes','plan','notes','requests','notifs','published','history','mins','minRepos','tol','contact'].forEach(k=>{ if(k in j) S[k]=j[k]; });
+  S.allAgents = j.agents; S.agents = j.agents.filter(a=>a.grade!=='CADRE');
+}
+function setBusy(b){ document.documentElement.classList.toggle('busy', b); }
+async function act(action, data, okMsg){
+  setBusy(true);
+  try{ const j = await api(action, data); applyState(j); if(okMsg) toast(okMsg); render(); return j; }
+  catch(e){ toast(e.message); render(); return null; }
+  finally{ setBusy(false); }
+}
+function bg(action, data, okMsg){ return api(action, data).then(j=>{ if(okMsg) toast(okMsg); return j; }, e=>{ toast(e.message); }); }
+function setSync(st){ const el=document.getElementById('sync'); if(!el) return; el.className='sync'+(st==='err'?' err':''); el.textContent = st==='saving'?'Enregistrement…':st==='ok'?'Enregistré ✓':st==='err'?'Non enregistré':''; if(st==='ok') setTimeout(()=>{ if(el.textContent==='Enregistré ✓') el.textContent=''; },2500); }
+let PEND = [], PT = null;
+function queueCell(aid, date){
+  const code=(S.plan[aid]||{})[date]||'', note=(S.notes[aid]||{})[date]||'';
+  const i=PEND.findIndex(x=>x.aid===aid&&x.date===date); const o={aid,date,code,note};
+  if(i>=0) PEND[i]=o; else PEND.push(o);
+  clearTimeout(PT); PT=setTimeout(flushCells, 900); setSync('saving');
+}
+async function flushCells(){
+  clearTimeout(PT); if(!PEND.length) return;
+  const ch=PEND; PEND=[];
+  try{ const j=await api('setCells', {changes:ch}); if(!PEND.length){ applyState(j); if(!UI.pop) render(); } setSync('ok'); }
+  catch(e){ PEND=ch.concat(PEND); setSync('err'); toast('Non enregistré : '+e.message+' Nouvel essai dans 10 s.'); PT=setTimeout(flushCells, 10000); }
+}
+let CT=null;
+function queueCodes(){ clearTimeout(CT); setSync('saving'); CT=setTimeout(()=>api('saveCodes',{codes:S.codes}).then(()=>setSync('ok'),e=>{ setSync('err'); toast(e.message); }), 700); }
+async function refresh(){
+  if(!S.me || PEND.length || UI.pop || document.visibilityState!=='visible') return;
+  const ae=document.activeElement; if(ae && ae.matches && ae.matches('input,select,textarea')) return;
+  try{ const j=await api('state'); applyState(j); if(!UI.pop) render(); }catch(e){}
+}
+async function boot(){
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+  if(TOKEN){ app.innerHTML = `<div class="splash"><div>${MARK(64)}<div class="bigword">PARAMED</div><p>Chargement du planning…</p></div></div>`;
+    try{ applyState(await api('state')); }catch(e){ toast(e.message); } }
+  else { api('etabPublic').then(j=>{ Object.assign(S.etab, j.etab); if(!S.me) render(); }).catch(()=>{}); }
+  render();
+  setInterval(refresh, 60000);
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') refresh(); });
+  window.addEventListener('beforeunload', e=>{ if(PEND.length){ flushCells(); e.preventDefault(); e.returnValue=''; } });
+}
+const UI = {mode:(window.innerWidth<700?'semaine':'mois'), wk:null, filter:'tous', brush:null, pop:null, notifOpen:false, preview:false, swap:{}, conge:{}, newAcct:false, selDay:null};
+function save(){}
+
+/* ---------- Helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const K = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const parseK = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
+const kOf = dt => K(dt.getFullYear(), dt.getMonth(), dt.getDate());
+const dim = (y,m) => new Date(y,m+1,0).getDate();
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function isoWeek(dt){ const d=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate())); const day=d.getUTCDay()||7; d.setUTCDate(d.getUTCDate()+4-day); const y0=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return {w:Math.ceil(((d-y0)/864e5+1)/7), y:d.getUTCFullYear()}; }
+function monday(dt){ const d=new Date(dt); const day=d.getDay()||7; d.setDate(d.getDate()-day+1); return d; }
+const addDays = (dt,n) => { const d=new Date(dt); d.setDate(d.getDate()+n); return d; };
+const fmtH = h => { const s = h<0?'−':''; h=Math.abs(h); const H=Math.floor(h), M=Math.round((h-H)*60); return s+H+'h'+(M?pad(M):''); };
+const fmtDay = k => { const d=parseK(k); return `${JLONG[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`; };
+const fmtShort = k => { const d=parseK(k); return `${JL[d.getDay()]} ${d.getDate()}/${pad(d.getMonth()+1)}`; };
+const codeOf = c => S.codes.find(x=>x.c===c);
+const agent = id => (S.allAgents||[]).find(a=>a.id===id) || S.agents.find(a=>a.id===id);
+const fullName = a => a ? `${a.prenom} ${a.nom}` : '';
+const isWorked = c => { const x=codeOf(c); return !!x && WORKED.includes(x.cat); };
+const isOff = c => { const x=codeOf(c); return !!x && !WORKED.includes(x.cat); };
+const hoursOf = c => { const x=codeOf(c); return x && x.compte ? +x.dur||0 : 0; };
+const catOf = c => (codeOf(c)||{}).cat || '';
+const horaire = c => { const x=codeOf(c); if(!x) return ''; return x.deb&&x.fin ? `${x.deb}–${x.fin}` : (x.compte? fmtH(x.dur) : x.lib); };
+function toast(t){ const el=document.createElement('div'); el.className='toast'; el.textContent=t; document.body.appendChild(el); setTimeout(()=>el.remove(),2600); }
+const meAdmin = () => !!S.admin;
+const forMe = n => true;
+function notify(to,text){ S.notifs.unshift({to,text,at:new Date().toISOString().slice(0,16),read:false}); }
+
+/* ---------- Jours fériés ---------- */
+function easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mm=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*mm+114)/31),da=((h+l-7*mm+114)%31)+1; return new Date(y,mo-1,da); }
+const FER={};
+function feries(y){ const e=easter(y); const L={}; [[0,1,"Jour de l'an"],[4,1,'Fête du travail'],[4,8,'Victoire 1945'],[6,14,'Fête nationale'],[7,15,'Assomption'],[10,1,'Toussaint'],[10,11,'Armistice'],[11,25,'Noël']].forEach(([m,d,n])=>L[K(y,m,d)]=n); L[kOf(addDays(e,1))]='Lundi de Pâques'; L[kOf(addDays(e,39))]='Ascension'; L[kOf(addDays(e,50))]='Lundi de Pentecôte'; return L; }
+const ferie = k => { const y=k.slice(0,4); if(!FER[y]) FER[y]=feries(+y); return FER[y][k]; };
+function recf(aid){ const pl=S.plan[aid]||{}; let acq=0,pos=0; Object.entries(pl).forEach(([k,c])=>{ if(ferie(k)&&isWorked(c)&&catOf(c)!=='form') acq++; if(c==='RECF') pos++; }); return {acq,pos,solde:acq-pos}; }
+const toMin = t => { const [h,m]=t.split(':').map(Number); return h*60+m; };
+function restIssues(plan,aid,y,m){ const out=[]; for(let d=0; d<=dim(y,m); d++){ const k1=kOf(new Date(y,m,d)), k2=kOf(new Date(y,m,d+1)); if(k2.slice(0,7)!==K(y,m,1).slice(0,7)) continue; const a=codeOf(getCode(plan,aid,k1)), b=codeOf(getCode(plan,aid,k2)); if(!a||!b||!a.deb||!a.fin||!b.deb||!WORKED.includes(a.cat)||!WORKED.includes(b.cat)) continue; let end=toMin(a.fin); if(end<=toMin(a.deb)) end+=1440; const rest=(1440+toMin(b.deb)-end)/60; if(rest<S.minRepos) out.push({k1,k2,rest,a:a.c,b:b.c}); } return out; }
+const ONSITE=['matin','soir','jour','nuit'];
+function effectif(plan,k,grade){ return S.agents.filter(a=>a.grade===grade&&ONSITE.includes(catOf(getCode(plan,a.id,k)))).length; }
+function staffIssues(plan,y,m,keys){ const out=[]; Object.entries(S.mins).forEach(([g,min])=>{ if(!min||!S.agents.some(a=>a.grade===g)) return; const ks=keys||Array.from({length:dim(y,m)},(_,i)=>K(y,m,i+1)); ks.forEach(k=>{ if(!S.agents.some(a=>getCode(plan,a.id,k))) return; const n=effectif(plan,k,g); if(n<min) out.push({k,g,n,min}); }); }); return out; }
+
+/* ---------- Règles ---------- */
+// plan "virtuel" : permet de simuler une demande avant de l'envoyer
+function getCode(plan,aid,k){ return (plan[aid]||{})[k]; }
+function weekendsOff(plan,aid,y,m){
+  let ok=0,total=0; const n=dim(y,m);
+  for(let d=1; d<=n; d++){ const dt=new Date(y,m,d); if(dt.getDay()!==6) continue; if(d+1>n) continue; total++;
+    const a=getCode(plan,aid,K(y,m,d)), b=getCode(plan,aid,K(y,m,d+1)); if(isOff(a)&&isOff(b)) ok++; }
+  return {ok,total};
+}
+function quatorzaines(plan,aid,y,m){
+  const ag=agent(aid); const q=(ag?ag.quotite:100)/100; const res=[]; const seen=new Set();
+  for(let d=1; d<=dim(y,m); d++){
+    const dt=new Date(y,m,d); const {w,y:wy}=isoWeek(dt); const start=w-(w%2===0?0:1); const id=wy+'-'+start; if(seen.has(id)) continue; seen.add(id);
+    let mon=monday(dt); if(w!==start) mon=addDays(mon,-7);
+    let hrs=0,known=0;
+    for(let i=0;i<14;i++){ const k=kOf(addDays(mon,i)); const c=getCode(plan,aid,k); if(c){known++; hrs+=hoursOf(c);} }
+    const attendu = 70*q*known/14; const ecart = hrs-attendu;
+    res.push({label:`S${start}–S${start+1}`, start, hrs, known, attendu, ecart, complete: known===14, from:kOf(mon), to:kOf(addDays(mon,13))});
+  }
+  return res;
+}
+function monthHours(plan,aid,y,m){ let h=0,planned=0; const n=dim(y,m); for(let d=1;d<=n;d++){const c=getCode(plan,aid,K(y,m,d)); if(c){planned++; h+=hoursOf(c);} } const ag=agent(aid); return {h, planned, n, attendu: 5*(ag?ag.quotite:100)/100*planned}; }
+function qStatus(q){ if(!q.known) return 'na'; const t=S.tol; if(Math.abs(q.ecart)<=t) return 'ok'; return Math.abs(q.ecart)<=t*2?'warn':'bad'; }
+function checkAgent(plan,aid,y,m){
+  const we=weekendsOff(plan,aid,y,m); const qs=quatorzaines(plan,aid,y,m); const mh=monthHours(plan,aid,y,m);
+  const out=[];
+  if(mh.planned>0 && we.ok<2) out.push({lvl:'bad', txt:`${we.ok} week-end de repos sur le mois (2 minimum)`, block:true});
+  qs.filter(q=>q.complete && qStatus(q)!=='ok').forEach(q=>out.push({lvl:qStatus(q), txt:`Quatorzaine ${q.label} : ${fmtH(q.hrs)} pour 70h (${q.ecart>0?'+':''}${fmtH(q.ecart)})`}));
+  const rs=restIssues(plan,aid,y,m); rs.forEach(r=>out.push({lvl:'bad', txt:`Repos de ${fmtH(r.rest)} entre ${r.a} (${fmtShort(r.k1)}) et ${r.b} (${fmtShort(r.k2)}), ${S.minRepos} h minimum`}));
+  if(mh.planned>0 && mh.planned<mh.n) out.push({lvl:'warn', txt:`${mh.n-mh.planned} jour(s) non planifié(s)`});
+  return {we,qs,mh,out,rs};
+}
+function clonePlan(){ return JSON.parse(JSON.stringify(S.plan)); }
+function simulate(req){
+  const p=clonePlan();
+  if(req.type==='echange'){ p[req.from]=p[req.from]||{}; p[req.to]=p[req.to]||{};
+    const a=p[req.from][req.d1], b=p[req.to][req.d2];
+    if(req.d1===req.d2){ p[req.from][req.d1]=b; p[req.to][req.d2]=a; }
+    else { // chacun prend le poste de l'autre, et laisse son jour en repos
+      const aOther=p[req.from][req.d2], bOther=p[req.to][req.d1];
+      p[req.from][req.d2]=b; p[req.from][req.d1]=bOther&&isOff(bOther)?bOther:'RH';
+      p[req.to][req.d1]=a; p[req.to][req.d2]=aOther&&isOff(aOther)?aOther:'RH';
+    }
+  } else if(req.type==='conge'){ p[req.from]=p[req.from]||{}; let d=parseK(req.du); const end=parseK(req.au);
+    while(d<=end){ const k=kOf(d); const cur=p[req.from][k]; if(!cur || isWorked(cur)) p[req.from][k]=req.code; d=addDays(d,1); } }
+  return p;
+}
+function reqChecks(req){
+  const p=simulate(req); const d=parseK(req.type==='echange'?req.d1:req.du); const y=d.getFullYear(), m=d.getMonth();
+  const ids = req.type==='echange'?[req.from,req.to]:[req.from];
+  const res=[]; let block=false;
+  ids.forEach(id=>{ const c=checkAgent(p,id,y,m); const a=agent(id);
+    res.push({lvl:c.we.ok>=2?'ok':'bad', txt:`${a.prenom} : ${c.we.ok} WE off`}); if(c.we.ok<2) block=true;
+    const rel=c.qs.filter(q=>{const keys=req.type==='echange'?[req.d1,req.d2]:[req.du,req.au]; return keys.some(k=>k>=q.from&&k<=q.to);});
+    rel.forEach(q=>res.push({lvl:q.complete?qStatus(q):'na', txt:`${a.prenom} ${q.label} : ${fmtH(q.hrs)}${q.complete?' / 70h':' (partielle)'}`}));
+    const before=restIssues(S.plan,id,y,m).length; const after=c.rs.length; if(after>before) res.push({lvl:'bad', txt:`${a.prenom} : repos < ${S.minRepos} h`});
+  });
+  const keys=[]; if(req.type==='echange'){ keys.push(req.d1); if(req.d2!==req.d1) keys.push(req.d2); } else { let dd=parseK(req.du); while(dd<=parseK(req.au)){ keys.push(kOf(dd)); dd=addDays(dd,1);} }
+  const st=staffIssues(p,y,m,keys).filter(x=>staffIssues(S.plan,y,m,[x.k]).length===0||effectif(p,x.k,x.g)<effectif(S.plan,x.k,x.g));
+  st.forEach(x=>res.push({lvl:'bad', txt:`${x.g} le ${fmtShort(x.k)} : ${x.n} (min ${x.min})`}));
+  if(!st.length&&keys.length) res.push({lvl:'ok', txt:'Effectif minimum respecté'});
+  return {res,block,p};
+}
+
+/* ---------- Icônes / logo ---------- */
+const MARK = (s=38)=>`<svg class="mark" viewBox="0 0 48 48" width="${s}" height="${s}" aria-hidden="true"><rect x="3" y="7" width="42" height="38" rx="11" fill="#2F547F"/><rect x="12" y="2.5" width="5" height="10" rx="2.5" fill="#EBAC8D"/><rect x="31" y="2.5" width="5" height="10" rx="2.5" fill="#EBAC8D"/><path d="M24 14.5c1.3 6.6 2.9 8.2 9.5 9.5-6.6 1.3-8.2 2.9-9.5 9.5-1.3-6.6-2.9-8.2-9.5-9.5 6.6-1.3 8.2-2.9 9.5-9.5z" fill="#EBAC8D"/><path d="M35.5 33c.5 2.3 1 2.8 3.3 3.3-2.3.5-2.8 1-3.3 3.3-.5-2.3-1-2.8-3.3-3.3 2.3-.5 2.8-1 3.3-3.3z" fill="#FBF3EA"/></svg>`;
+const WAVE = `<svg class="wave" viewBox="0 0 150 10" aria-hidden="true"><path d="M2 6c10-6 18 4 28 0s18-6 28 0 18 4 28 0 18-6 28 0 18 4 28 0" fill="none" stroke="#EBAC8D" stroke-width="3" stroke-linecap="round"/></svg>`;
+const STAR = `<svg class="star" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1c.6 3.6 1.4 4.4 5 5-3.6.6-4.4 1.4-5 5-.6-3.6-1.4-4.4-5-5 3.6-.6 4.4-1.4 5-5z" fill="#EBAC8D"/></svg>`;
+const IC = {
+  planning:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"/>',
+  demandes:'<path d="M4 7h13l-3-3M20 17H7l3 3"/>',
+  equipe:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.6-.2 4.4 1.3 5 4.3"/>',
+  codes:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  charte:'<path d="M12 3c1 5.2 2.2 6.6 7.4 7.6-5.2 1-6.4 2.4-7.4 7.6-1-5.2-2.2-6.6-7.4-7.6C9.8 9.6 11 8.2 12 3z"/>',
+  monplanning:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15.5" r="2"/>',
+  echanges:'<path d="M4 7h13l-3-3M20 17H7l3 3"/>',
+  conges:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>',
+  parametres:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
+  service:'<path d="M4 6h16M4 12h16M4 18h16"/><path d="M9 3v18"/>'
+};
+const BELL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 003.4 0"/></svg>`;
+
+/* ---------- Rendu ---------- */
+const app = document.getElementById('app');
+function render(){
+  const gw=document.querySelector('.grid-wrap'); const gx=gw?gw.scrollLeft:0;
+  closePop();
+  if(!S.me){ app.innerHTML = loginView(); bindLogin(); return; }
+  const me = agent(S.me) || {prenom:'', nom:'', grade:''};
+  const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(!me.tutoVu && !UI.tutoDone){ UI.tutoDone=true; if(standalone) bg('updateMe',{tutoVu:true}); else UI.tuto=true; }
+  const pureCadre = S.admin && me.grade==='CADRE';
+  const adminAgent = S.admin && !pureCadre;
+  const tabs = adminAgent ? [['planning','Planning','Planning'],['demandes','Demandes','Demandes'],['equipe','Équipe','Équipe'],['monplanning','Mon planning','Moi'],['parametres','Paramètres','Réglages']] : pureCadre
+    ? [['planning','Planning','Planning'],['demandes','Demandes','Demandes'],['equipe','Équipe','Équipe'],['parametres','Paramètres','Réglages']]
+    : [['monplanning','Mon planning','Planning'],['echanges','Échanges','Échanges'],['conges','Congés','Congés'],['service','Planning du service','Service'],['parametres','Paramètres','Réglages']];
+  const extra = adminAgent ? ['echanges','conges'] : [];
+  if(!tabs.some(t=>t[0]===S.view) && !extra.includes(S.view)) S.view=tabs[0][0];
+  const pend = S.admin ? S.requests.filter(r=>r.status==='attente-cadre').length : 0;
+  const recv = S.requests.filter(r=>r.status==='attente-collegue'&&r.to===S.me).length;
+  const unread = S.notifs.filter(n=>!n.read).length;
+  app.innerHTML = `
+  <header class="appbar">
+    <div class="appbar-top">
+      <div class="logo">${MARK()}<div class="word"><b>PARAMED</b><i>by Soignant Pratik</i></div></div>
+      <div class="ctx"><b>${esc(S.etab.nom)} · ${esc(S.etab.service)}</b><span>${esc(S.etab.unite)} · UF ${esc(S.etab.uf)}</span></div>
+      <div class="spacer"></div>
+      <span id="sync" class="sync"></span>
+      <div style="position:relative">
+        <button class="iconbtn" id="bell" aria-label="Notifications">${BELL}${unread?`<span class="badge">${unread}</span>`:''}</button>
+        ${UI.notifOpen?notifPop():''}
+      </div>
+      <div class="user"><button class="avatar" id="avatarBtn" aria-label="Se déconnecter">${esc((me.prenom[0]||'')+(me.nom[0]||''))}</button><span class="who"><b>${esc(me.prenom)} ${esc(me.nom)}</b><small>${pureCadre?'Cadre de santé':esc(me.grade)+(adminAgent?' · cadre adjointe':'')}</small></span><button class="btn btn-ghost btn-sm" id="logout">Déconnexion</button></div>
+    </div>
+    <nav class="tabs" role="tablist">${tabs.map(([k,l,sh])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.view===k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg><span class="tl">${l}</span><span class="ts">${sh}</span>${k==='demandes'&&pend?`<span class="pill">${pend}</span>`:''}${k==='echanges'&&recv?`<span class="pill">${recv}</span>`:''}</button>`).join('')}</nav>
+  </header>
+  <main>${({planning:planningView,demandes:demandesView,equipe:equipeView,codes:codesView,parametres:parametresView,monplanning:monPlanningView,echanges:echangesView,conges:congesView,service:serviceView})[S.view]()}</main>
+  <p class="foot-note">Un bug, une idée ? Écris à <b style="user-select:all">${esc(S.contact)}</b><br>PARAMED · © Léa CAVADASKI — Soignant Pratik</p>
+  ${UI.preview?printView():''}${UI.tuto?tutoView():''}`;
+  bindApp();
+  const gw2=document.querySelector('.grid-wrap'); if(gw2) gw2.scrollLeft=gx;
+}
+
+function loginView(){
+  const GR=`<option value="IDE">IDE</option><option value="AS">AS</option><option value="CS">CS (dans le planning)</option><option value="CADRE">Cadre (hors planning)</option>`;
+  if(UI.newAcct) return `
+  <div class="login"><form class="login-card" id="acctForm"><div class="cloud"></div>
+    <div class="login-hero">${MARK(56)}<div class="bigword" style="font-size:28px">Créer mon compte</div>${WAVE}<span class="tag">première connexion</span></div>
+    <div class="row2"><div class="field"><label for="na-prenom">Prénom</label><input class="input" id="na-prenom" required autocomplete="given-name"></div><div class="field"><label for="na-nom">Nom</label><input class="input" id="na-nom" required autocomplete="family-name"></div></div>
+    <div class="row2"><div class="field"><label for="na-grade">Fonction</label><select class="input" id="na-grade">${GR}</select></div><div class="field"><label for="na-code">Code du service</label><input class="input" id="na-code" required autocapitalize="characters" placeholder="donné par ta cadre"></div></div>
+    <div class="field"><label for="na-mail">E-mail (pour les notifications)</label><input class="input" id="na-mail" type="email" required autocomplete="email"></div>
+    <div class="field"><label for="na-pass">Mot de passe (6 caractères minimum)</label><input class="input" id="na-pass" type="password" required minlength="6" autocomplete="new-password"></div>
+    <button class="btn btn-primary btn-block" type="submit">Créer mon compte</button>
+    <p class="copyright">Écris ton nom et ton prénom comme sur le planning : ta ligne est reliée automatiquement.</p>
+    <p class="copyright"><button class="linkish" type="button" id="backLogin">J'ai déjà un compte</button></p>
+  </form></div>`;
+  return `
+  <div class="login"><form class="login-card" id="loginForm"><div class="cloud"></div>
+    <div class="login-hero">${MARK(72)}<div class="bigword">PARAMED</div>${WAVE}<span class="tag">le planning qui prend soin de l'équipe</span><span class="who">${esc(S.etab.nom)}${S.etab.service?' · '+esc(S.etab.service):''}</span></div>
+    <div class="field"><label for="lg-mail">E-mail</label><input class="input" id="lg-mail" type="email" required autocomplete="email" placeholder="prenom.nom@exemple.fr"></div>
+    <div class="field"><label for="lg-pass">Mot de passe</label><input class="input" id="lg-pass" type="password" required autocomplete="current-password" placeholder="••••••••"></div>
+    <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+    <p class="copyright">Première connexion ? <button class="linkish" type="button" id="toNew">Créer mon compte</button></p>
+    <p class="copyright">Mot de passe oublié ou souci de connexion ?<br><b style="user-select:all">${esc(S.contact)}</b></p>
+    <p class="copyright">© Léa CAVADASKI — Soignant Pratik</p>
+  </form></div>`;
+}
+function bindLogin(){
+  const v=id=>document.getElementById(id).value.trim();
+  const f=document.getElementById('loginForm');
+  if(f){ f.addEventListener('submit',async e=>{ e.preventDefault(); const btn=f.querySelector('[type=submit]'); btn.disabled=true; btn.textContent='Connexion…';
+      try{ const j=await api('login',{email:v('lg-mail'), password:document.getElementById('lg-pass').value}); setToken(j.token); applyState(j); S.view=null; render(); }
+      catch(err){ toast(err.message); btn.disabled=false; btn.textContent='Se connecter'; } });
+    document.getElementById('toNew').onclick=()=>{UI.newAcct=true; render();}; }
+  const g=document.getElementById('acctForm');
+  if(g){ document.getElementById('backLogin').onclick=()=>{UI.newAcct=false; render();};
+    g.addEventListener('submit',async e=>{ e.preventDefault(); const btn=g.querySelector('[type=submit]'); btn.disabled=true; btn.textContent='Création…';
+      try{ const j=await api('register',{prenom:v('na-prenom'), nom:v('na-nom'), grade:v('na-grade'), code:v('na-code'), email:v('na-mail'), password:document.getElementById('na-pass').value});
+        setToken(j.token); applyState(j); UI.newAcct=false; UI.tutoDone=false; S.view=null; render(); toast('Compte créé. Bienvenue !'); }
+      catch(err){ toast(err.message); btn.disabled=false; btn.textContent='Créer mon compte'; } });
+  }
+}
+function notifPop(){
+  const list=S.notifs.filter(forMe);
+  return `<div class="notif-pop" id="notifPop"><h4>Notifications</h4>${list.length?list.slice(0,8).map(n=>`<div class="notif ${n.read?'read':'unread'}"><span class="dot"></span><div><p>${esc(n.text)}</p><time>${esc(String(n.at).replace('T',' à '))}</time></div></div>`).join(''):'<p class="muted" style="padding:8px">Rien de neuf.</p>'}</div>`;
+}
+
+function weekStart(){ if(UI.wk) return UI.wk; const t=new Date(); const base=(t.getFullYear()===S.y&&t.getMonth()===S.m)?t:new Date(S.y,S.m,1); return kOf(monday(base)); }
+function gridDays(){ const out=[]; if(UI.mode==='semaine'){ const st=parseK(weekStart()); for(let i=0;i<7;i++){ const dt=addDays(st,i); out.push({d:dt.getDate(),k:kOf(dt),dow:dt.getDay(),w:isoWeek(dt).w}); } } else { for(let d=1;d<=dim(S.y,S.m);d++){ const dt=new Date(S.y,S.m,d); out.push({d,k:K(S.y,S.m,d),dow:dt.getDay(),w:isoWeek(dt).w}); } } return out; }
+function weekNav(){ const st=parseK(weekStart()), en=addDays(st,6); const w=isoWeek(st).w; const f=dt=>`${dt.getDate()} ${MOIS[dt.getMonth()].slice(0,4)}${MOIS[dt.getMonth()].length>4?'.':''}`; return `<div class="monthnav"><button data-wnav="-1" aria-label="Semaine précédente">‹</button><b style="text-transform:none">S${w} · ${f(st)} – ${f(en)}</b><button data-wnav="1" aria-label="Semaine suivante">›</button></div>`; }
+function periodNav(){ return UI.mode==='semaine'?weekNav():monthNav(); }
+function modeSeg(){ return `<div class="seg" role="group" aria-label="Affichage">${[['semaine','Semaine'],['mois','Mois']].map(([k,l])=>`<button data-mode="${k}" aria-pressed="${UI.mode===k}">${l}</button>`).join('')}</div>`; }
+function monthNav(){ return `<div class="monthnav"><button data-mnav="-1" aria-label="Mois précédent">‹</button><b>${MOIS[S.m]} ${S.y}</b><button data-mnav="1" aria-label="Mois suivant">›</button></div>`; }
+
+function gridHTML(readonly){
+  const y=S.y,m=S.m; const days=gridDays(); const wkMode=UI.mode==='semaine'; const n=days.length-(wkMode?3:0); const xcTd=wkMode?'':'<td colspan="3"></td>';
+  const weeks=[]; days.forEach(x=>{ const l=weeks[weeks.length-1]; if(l&&l.w===x.w) l.n++; else weeks.push({w:x.w,n:1}); });
+  const order=['CS','IDE','AS']; const grades=[...new Set([...order,...S.agents.map(a=>a.grade)])];
+  const shown = g => UI.filter==='tous'||UI.filter===g;
+  let body='';
+  grades.forEach(g=>{ if(!shown(g)) return; const list=S.agents.filter(a=>a.grade===g);
+    if(!list.length && g!=='AS') return;
+    body+=`<tr class="group"><th class="name" scope="rowgroup">${esc(g)} · ${list.length} agent${list.length>1?'s':''}</th><td colspan="${n+3}"></td></tr>`;
+    if(!list.length){ body+=`<tr><th class="name muted" style="font-weight:500">Aucun AS pour l'instant</th><td colspan="${n+3}" class="muted" style="text-align:left;padding:8px">Ajoute-les dans l'onglet Équipe.</td></tr>`; }
+    list.forEach(a=>{ const c=checkAgent(S.plan,a.id,y,m); const pl=S.plan[a.id]||{}; const nt=S.notes[a.id]||{}; const rbad=new Set(restIssues(S.plan,a.id,y,m).flatMap(r=>[r.k1,r.k2]));
+      body+=`<tr class="${a.id===S.me?'mine':''}"><th class="name" scope="row">${esc(a.nom)} ${esc(a.prenom)}<span class="g">${esc(a.grade)}</span>${a.quotite<100?`<small>${a.quotite} %</small>`:''}</th>`;
+      days.forEach((x,i)=>{ const code=pl[x.k]; const cat=catOf(code); const we=x.dow===0||x.dow===6; const ws=x.dow===1&&i>0;
+        body+=`<td class="${we?'we':''} ${ws?'wkstart':''}"><button class="cell ${code?'k-'+cat:'empty'} ${readonly?'ro':''} ${rbad.has(x.k)?'restbad':''}" data-a="${a.id}" data-k="${x.k}" ${readonly?'tabindex="-1"':''} title="${esc(fullName(a))} · ${fmtDay(x.k)}${code?' · '+esc(code)+' '+esc(horaire(code)):''}${nt[x.k]?' · '+esc(nt[x.k]):''}">${code?esc(code):'·'}${nt[x.k]?'<span class="note"></span>':''}</button></td>`; });
+      const qs=c.qs.filter(q=>q.complete); const worst=qs.reduce((w,q)=>{const s=qStatus(q); return s==='bad'?'bad':(s==='warn'&&w!=='bad'?'warn':w);},'ok');
+      body+=wkMode?'</tr>':`<td class="cnt num">${fmtH(c.mh.h)}</td><td class="cnt">${qs.length?`<span class="st ${worst}">${qs.map(q=>(q.ecart>0?'+':'')+fmtH(q.ecart)).join(' ')}</span>`:'<span class="st na">—</span>'}</td><td class="cnt"><span class="st ${c.we.ok>=2?'ok':(c.mh.planned?'bad':'na')}">${c.we.ok} WE</span></td></tr>`;
+    });
+  });
+  const eff = cat => days.map((x,i)=>{ const v=S.agents.filter(a=>catOf((S.plan[a.id]||{})[x.k])===cat||(cat==='matin'&&catOf((S.plan[a.id]||{})[x.k])==='jour')).length; return `<td class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} num">${v||''}</td>`; }).join('');
+  return `<div class="grid-wrap"><table class="grid">
+    <thead><tr class="wk"><th class="name first" rowspan="2" style="vertical-align:bottom;padding-bottom:8px">Agent</th>${weeks.map((w,i)=>`<th colspan="${w.n}" class="${i===0?'first':''}">S${w.w}</th>`).join('')}${wkMode?'':'<th colspan="3" style="border-left:2px solid var(--line)">Compteurs</th>'}</tr>
+    <tr class="days">${days.map((x,i)=>`<th class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} ${ferie(x.k)?'fer':''}" ${ferie(x.k)?`title="${esc(ferie(x.k))}"`:''}><span>${ferie(x.k)?'férié':JL[x.dow]}</span><b class="num">${pad(x.d)}</b></th>`).join('')}${wkMode?'':'<th style="border-left:2px solid var(--line);padding:0 8px">Mois</th><th style="padding:0 8px">Écart 70h</th><th style="padding:0 8px">WE off</th>'}</tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot>${Object.entries(S.mins).filter(([g,mn])=>mn&&S.agents.some(a=>a.grade===g)).map(([g,mn])=>`<tr class="effmin"><th class="name">${g} présents (min ${mn})</th>${days.map((x,i)=>{ const has=S.agents.some(a=>getCode(S.plan,a.id,x.k)); const v=effectif(S.plan,x.k,g); return `<td class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} num ${has&&v<mn?'under':''}">${has?v:''}</td>`; }).join('')}${xcTd}</tr>`).join('')}<tr><th class="name">Effectif matin / jour</th>${eff('matin')}${xcTd}</tr><tr><th class="name">Effectif soir</th>${eff('soir')}${xcTd}</tr></tfoot>
+  </table></div>`;
+}
+
+function planningView(){
+  const y=S.y,m=S.m; const checks=S.agents.map(a=>({a,c:checkAgent(S.plan,a.id,y,m)}));
+  const blocking=checks.filter(x=>x.c.out.some(o=>o.block)); const mk=K(y,m,1).slice(0,7); const pub=S.published[mk];
+  const staff=staffIssues(S.plan,y,m); const staffAlerts=[]; Object.keys(S.mins).forEach(g=>{ const l=staff.filter(x=>x.g===g); if(l.length) staffAlerts.push({lvl:'bad', a:null, who:'Service', txt:`moins de ${S.mins[g]} ${g} : ${l.map(x=>`${fmtShort(x.k)} (${x.n})`).join(', ')}`}); });
+  const alerts=staffAlerts.concat(checks.flatMap(x=>x.c.out.map(o=>({...o,a:x.a})))).sort((p,q)=>(q.block?1:0)-(p.block?1:0));
+  const hist=S.history.filter(h=>h.k.startsWith(mk));
+  const canFill=S.agents.some(a=>a.cycle&&a.cycle.codes.length);
+  const qRows=S.agents.map(a=>{ const qs=checkAgent(S.plan,a.id,y,m).qs; return `<tr><td>${esc(a.prenom)} ${esc(a.nom)}</td>${qs.map(q=>`<td class="num"><span class="st ${q.complete?qStatus(q):'na'}">${fmtH(q.hrs)}</span>${q.complete?'':' <small class="muted">partielle</small>'}</td>`).join('')}</tr>`; }).join('');
+  const qHead=S.agents.length?checkAgent(S.plan,S.agents[0].id,y,m).qs.map(q=>`<th>${q.label}</th>`).join(''):'';
+  return `
+  <div class="page-head"><div><span class="sub">planning ${UI.mode==='semaine'?'de la semaine':'mensuel'}</span><h1>${esc(S.etab.unite)}</h1></div>${periodNav()}<div class="spacer"></div>
+    ${canFill?'<button class="btn btn-ghost" id="btnFill">Pré-remplir</button>':''}<button class="btn btn-ghost" id="btnPreview">Imprimer</button>
+    <button class="btn btn-primary" id="btnPublish" ${blocking.length?'disabled':''}>${pub?'Republier':'Publier le planning'}</button></div>
+  ${blocking.length?`<div class="banner bad"><span>⛔</span><div><b>Publication bloquée : ${blocking.length} agent${blocking.length>1?'s n’ont':' n’a'} pas 2 week-ends de repos.</b>${blocking.map(x=>esc(fullName(x.a))).join(', ')}</div></div>`:(pub?`<div class="banner ok"><span>✓</span><div><b>Planning publié le ${esc(pub)}.</b>Les agents ont été prévenus.</div></div>`:'')}
+  <div class="toolbar">${modeSeg()}
+    <div class="seg" role="group" aria-label="Filtrer">${['tous','IDE','AS','CS'].map(g=>`<button data-filter="${g}" aria-pressed="${UI.filter===g}">${g==='tous'?'Tous':g}</button>`).join('')}</div>
+  </div>
+  <div class="brushbar"><span class="lbl">Pinceau</span>${S.codes.map(c=>`<button class="chip k-${c.cat}" data-brush="${esc(c.c)}" aria-pressed="${UI.brush===c.c}" title="${esc(c.lib)}">${esc(c.c)}</button>`).join('')}<button class="chip erase" data-brush="__erase" aria-pressed="${UI.brush==='__erase'}">Effacer</button>${UI.brush?`<button class="btn btn-ghost btn-sm" data-brush="">Arrêter</button>`:'<span class="muted" style="font-size:12px;margin-left:6px">Choisis un code puis clique les cases, ou clique une case directement.</span>'}</div>
+  ${gridHTML(false)}
+  <div class="legend">${Object.entries(CATS).map(([k,l])=>`<span><i class="k-${k}"></i>${l}</span>`).join('')}<span><i style="background:var(--peach-deep);border-radius:50%;width:8px;height:8px"></i>Note : toucher la case pour la lire (doublure, renfort…)</span><span><i style="background:var(--bad);height:3px;width:16px;border-radius:2px"></i>Repos de moins de ${S.minRepos} h avec le poste d’à côté</span><span><b style="color:var(--muted)">·</b>&nbsp;Case vide</span></div>
+  <div class="cols">
+    <section class="panel"><h2>Contrôles <span class="hand">${alerts.length?alerts.length+' point'+(alerts.length>1?'s':''):'tout est bon'}</span></h2>
+      ${alerts.length?`<ul class="alerts">${alerts.slice(0,18).map(o=>`<li><span class="st ${o.lvl}">${o.block?'Bloquant':o.lvl==='bad'?'Écart':'À voir'}</span><span><b>${o.a?esc(fullName(o.a)):'Service'}</b> — ${esc(o.txt)}</span></li>`).join('')}</ul>`:'<p class="muted">Aucune alerte.</p>'}
+      <div class="rules"><b style="color:var(--ink)">Règles du service</b><label>IDE min/jour <input class="input num" type="number" min="0" max="30" data-min="IDE" value="${S.mins.IDE||0}"></label><label>AS min/jour <input class="input num" type="number" min="0" max="30" data-min="AS" value="${S.mins.AS||0}"></label><label>Repos entre 2 postes <input class="input num" type="number" min="0" max="24" step="0.5" id="minRepos" value="${S.minRepos}"> h</label><label>Tolérance 70 h ± <input class="input num" id="tol" type="number" min="0" max="20" step="0.5" value="${S.tol}"> h</label></div>
+    </section>
+    <section class="panel"><h2>Quatorzaines <span class="hand">objectif 70 h</span></h2>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Agent</th>${qHead}</tr></thead><tbody>${qRows}</tbody></table></div>
+    </section>
+  </div>
+  ${pub?`<section class="panel" style="margin-top:16px"><h2>Modifications depuis la publication <span class="hand">${hist.length||'aucune'}</span></h2>${hist.length?`<ul class="alerts">${hist.slice(0,20).map(h=>`<li><span class="st na">${esc(h.at.slice(8,10)+'/'+h.at.slice(5,7)+' '+h.at.slice(11))}</span><span><b>${esc(fullName(agent(h.aid)))}</b> — ${fmtShort(h.k)} : ${esc(h.from||'vide')} → ${esc(h.to||'vide')}${h.notif?' · prévenu(e)':' · notifications coupées'}</span></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">Chaque changement fait après publication s\u2019affiche ici, et l\u2019agent est prévenu s\u2019il a activé l\u2019option.</p>'}</section>`:''}`;
+}
+
+function reqCard(r, role){
+  const a=agent(r.from), b=r.to?agent(r.to):null; const ch=reqChecks(r);
+  const stat={'attente-collegue':['warn','En attente du collègue'],'attente-cadre':['warn','À valider par la cadre'],'validee':['ok','Validée'],'refusee':['bad','Refusée']}[r.status];
+  let detail='';
+  if(r.type==='echange'){ const c1=(S.plan[r.from]||{})[r.d1], c2=(S.plan[r.to]||{})[r.d2];
+    detail=`<div class="swap"><div class="side"><small>${esc(a.prenom)} donne</small><div><b>${fmtShort(r.d1)}</b> <span class="chip k-${catOf(c1)}">${esc(c1||'—')}</span></div></div><div class="arrow">⇄</div><div class="side"><small>${esc(b.prenom)} donne</small><div><b>${fmtShort(r.d2)}</b> <span class="chip k-${catOf(c2)}">${esc(c2||'—')}</span></div></div></div>`;
+  } else detail=`<p style="margin:0">${esc(r.code)} du <b>${fmtDay(r.du)}</b> au <b>${fmtDay(r.au)}</b></p>`;
+  let acts='';
+  if(role==='cadre'&&r.status==='attente-cadre') acts=`<button class="btn btn-primary btn-sm" data-valid="${r.id}" ${ch.block?'disabled title="Bloqué : règle des 2 week-ends"':''}>Valider</button><button class="btn btn-ghost btn-sm" data-refuse="${r.id}">Refuser</button>`;
+  if(role==='collegue'&&r.status==='attente-collegue') acts=`<button class="btn btn-primary btn-sm" data-accept="${r.id}" ${ch.block?'disabled':''}>Accepter</button><button class="btn btn-ghost btn-sm" data-refuse="${r.id}">Refuser</button>`;
+  return `<article class="req"><div class="req-head"><span class="st ${r.type==='echange'?'na':'warn'}">${r.type==='echange'?'Échange':'Congés'}</span><b>${esc(fullName(a))}${b?' ↔ '+esc(fullName(b)):''}</b><span class="spacer"></span><span class="st ${stat[0]}">${stat[1]}</span></div>${detail}
+    <div class="checks">${ch.res.map(x=>`<span class="st ${x.lvl}">${esc(x.txt)}</span>`).join('')}</div>${ch.block?'<div class="banner bad" style="margin:0"><span>⛔</span><div>Impossible : un agent passerait sous 2 week-ends de repos.</div></div>':''}${acts?`<div class="acts">${acts}</div>`:''}</article>`;
+}
+function demandesView(){
+  const pend=S.requests.filter(r=>r.status==='attente-cadre'), wait=S.requests.filter(r=>r.status==='attente-collegue'), done=S.requests.filter(r=>r.status==='validee'||r.status==='refusee');
+  return `<div class="page-head"><div><span class="sub">échanges & congés</span><h1>Demandes</h1></div></div>
+  <div class="cols" style="margin-top:0"><section class="panel"><h2>À valider <span class="hand">${pend.length}</span></h2><div class="reqs">${pend.map(r=>reqCard(r,'cadre')).join('')||'<p class="empty-note">Aucune demande en attente.</p>'}</div></section>
+  <section class="panel"><h2>En cours entre agents</h2><div class="reqs">${wait.map(r=>reqCard(r,'')).join('')||'<p class="empty-note">Rien en cours.</p>'}</div>
+  <h2 style="margin-top:18px">Historique</h2><div class="reqs">${done.map(r=>reqCard(r,'')).join('')||'<p class="empty-note">Pas encore d’historique.</p>'}</div></section></div>`;
+}
+function equipeView(){
+  return `<div class="page-head"><div><span class="sub">les agents du service</span><h1>Équipe</h1></div></div>
+  <div class="banner info"><span>${STAR}</span><div><b>Code à donner aux agents : <span class="num" style="user-select:all">${esc(S.etab.acces)}</span></b>À la première ouverture, chaque agent crée son compte avec ce code ; son nom est relié à sa ligne de planning.${S.etab.accesCadre?` Code cadre (à ne pas diffuser) : <b class="num" style="user-select:all">${esc(S.etab.accesCadre)}</b>.`:''}</div></div>
+  <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nom</th><th>Prénom</th><th>Fonction</th><th>Quotité</th><th>Droits</th><th>Roulement</th><th>RECF à poser</th><th>Compte</th></tr></thead><tbody>
+  ${S.allAgents.map(a=>`<tr><td><b>${esc(a.nom)}</b></td><td>${esc(a.prenom)}</td><td><select class="input" data-grade="${a.id}" aria-label="Fonction">${[['IDE','IDE'],['AS','AS'],['CS','CS'],['CADRE','Cadre (hors planning)']].map(([g,l])=>`<option value="${g}" ${a.grade===g?'selected':''}>${l}</option>`).join('')}</select></td><td><select class="input" data-quot="${a.id}" aria-label="Quotité">${[100,90,80,70,60,50].map(q=>`<option value="${q}" ${a.quotite==q?'selected':''}>${q} %</option>`).join('')}</select></td><td><select class="input" data-role="${a.id}" aria-label="Droits"><option value="agent" ${a.admin?'':'selected'}>Agent</option><option value="admin" ${a.admin?'selected':''}>Cadre adjointe</option></select></td><td><button class="btn btn-ghost btn-sm" data-cyc="${a.id}">${a.cycle&&a.cycle.codes.length?`${a.cycle.codes.length} j · modifier`:'Définir'}</button></td><td class="num">${(()=>{const r=recf(a.id); return `<span class="st ${r.solde>0?'warn':'na'}">${r.solde}</span> <small class="muted">${r.acq} acquis</small>`;})()}</td><td>${a.compte?'<span class="st ok">Créé</span>':'<span class="st na">Pas encore</span>'}</td></tr>${UI.cyc===a.id?cycEditor(a):''}`).join('')}
+  </tbody></table></div>
+  <form id="addAgent" class="form-grid" style="margin-top:14px;align-items:end"><div class="field" style="margin:0"><label for="ad-nom">Nom</label><input class="input" id="ad-nom" required placeholder="NOM"></div><div class="field" style="margin:0"><label for="ad-prenom">Prénom</label><input class="input" id="ad-prenom" required placeholder="Prénom"></div><div class="field" style="margin:0"><label for="ad-grade">Fonction</label><select class="input" id="ad-grade"><option>AS</option><option>IDE</option><option>CS</option></select></div><button class="btn btn-peach" type="submit">Ajouter l'agent</button></form></section>`;
+}
+function cycEditor(a){ const c=a.cycle||{start:kOf(monday(new Date(S.y,S.m,1))),codes:[]}; return `<tr><td colspan="9"><div class="cyc"><b>Roulement de ${esc(fullName(a))}</b><div class="form-grid"><div class="field" style="margin:0"><label for="cy-start">Commence le (un lundi)</label><input class="input" type="date" id="cy-start" value="${c.start}"></div><div class="field" style="margin:0"><label for="cy-weeks">Copier depuis le planning</label><select class="input" id="cy-weeks">${[1,2,3,4,5,6].map(w=>`<option value="${w}" ${c.codes.length===w*7?'selected':''}>${w} semaine${w>1?'s':''}</option>`).join('')}</select></div></div><textarea id="cy-codes" aria-label="Codes du roulement" placeholder="M10 M10 REC S1PO S1PO RH RH …">${esc(c.codes.join(' '))}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" id="cy-copy">Copier depuis le planning</button><button class="btn btn-primary btn-sm" id="cy-save">Enregistrer</button><button class="btn btn-ghost btn-sm" id="cy-del">Supprimer</button><button class="btn btn-ghost btn-sm" id="cy-close">Fermer</button></div><p class="muted" style="margin:0;font-size:12px">Le cycle se répète à partir de cette date. « Pré-remplir » dans Planning remplit seulement les cases vides.</p></div></td></tr>`; }
+const isIOS = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
+function tutoView(){ const os=UI.tutoOs||(isIOS()?'ios':'android');
+  const SHARE='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 002 2h10a2 2 0 002-2v-8"/></svg>';
+  const DOTS='<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="vertical-align:-3px"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+  const PLUS='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+  const steps = os==='ios'
+    ? [['Ouvre PARAMED dans Safari','Le lien fonctionne seulement depuis Safari sur iPhone et iPad.'],['Touche '+SHARE+' Partager','En bas de l\u2019écran (en haut sur iPad).'],['Choisis '+PLUS+' « Sur l\u2019écran d\u2019accueil »','Fais défiler la liste si tu ne le vois pas.'],['Touche « Ajouter »','L\u2019icône PARAMED apparaît avec tes autres apps. Ouvre-la toujours depuis là.']]
+    : [['Ouvre PARAMED dans Chrome','Sur Samsung, le navigateur Samsung Internet marche aussi.'],['Touche '+DOTS+' en haut à droite','Le menu du navigateur s\u2019ouvre.'],['Choisis « Installer l\u2019application »','Ou « Ajouter à l\u2019écran d\u2019accueil » selon le téléphone.'],['Confirme avec « Installer »','L\u2019icône PARAMED apparaît sur ton écran d\u2019accueil.']];
+  return `<div class="overlay tuto" role="dialog" aria-label="Installer l'app"><div class="tuto-card"><div class="login-hero" style="margin-bottom:12px">${MARK(56)}<div class="bigword" style="font-size:24px">Installe PARAMED</div>${WAVE}<span class="tag">comme une vraie app, en 30 secondes</span></div>
+    <div class="seg" role="group" aria-label="Téléphone" style="justify-content:center;margin:0 auto 14px;width:max-content"><button data-os="ios" aria-pressed="${os==='ios'}">iPhone</button><button data-os="android" aria-pressed="${os==='android'}">Android</button></div>
+    <ol class="tuto-steps">${steps.map(([t,d],i)=>`<li><span class="tn">${i+1}</span><div><b>${t}</b><p>${d}</p></div></li>`).join('')}</ol>
+    <button class="btn btn-primary btn-block" id="tutoOk">C\u2019est fait</button><p class="copyright" style="margin-top:10px">Tu retrouves ce tuto dans Réglages.</p></div></div>`; }
+function prefsView(){ return `  <div class="cols" style="margin-top:0"><section class="panel"><h2>Notifications</h2>
+    <label class="switch" for="nf-modifs"><span><b>Me prévenir si mon planning change</b><br><small class="muted">après publication, à chaque modification de la cadre</small></span><input type="checkbox" id="nf-modifs" ${(agent(S.me).notif||{}).modifs!==false?'checked':''}></label>
+    <label class="switch" for="nf-email"><span><b>Aussi par e-mail</b><br><small class="muted">en plus de la notification dans l\u2019app</small></span><input type="checkbox" id="nf-email" ${(agent(S.me).notif||{}).email!==false?'checked':''}></label></section>
+  <section class="panel"><h2>Agenda du téléphone</h2><p style="margin:0 0 10px">Ajoute tes prochains postes dans l\u2019agenda de ton iPhone ou Android. Ouvre le fichier puis choisis « Tout ajouter ». Pense à recommencer si ton planning change.</p><button class="btn btn-peach" id="btnIcs">Ajouter à mon agenda</button></section></div>`; }
+function parametresView(){ const cadre=meAdmin(); const me=agent(S.me);
+  return `<div class="page-head"><div><span class="sub">réglages</span><h1>Paramètres</h1></div></div>
+  ${`<section class="panel" style="margin-bottom:16px"><h2>Mon compte</h2><div class="form-grid"><div class="field"><label for="pm-mail">E-mail</label><input class="input" id="pm-mail" type="email" value="${esc(me.email||'')}" placeholder="prenom.nom@ch-chartres.fr"></div><div class="field"><label for="pm-pass">Nouveau mot de passe</label><input class="input" id="pm-pass" type="password" placeholder="••••••••"></div></div><button class="btn btn-ghost btn-sm" id="pmSave">Enregistrer</button></section>${prefsView()}`}
+  ${cadre?`<section class="panel" style="margin-top:16px"><h2>Établissement et service</h2><div class="form-grid">
+    <div class="field"><label for="et-nom">Établissement</label><input class="input" id="et-nom" data-etab="nom" value="${esc(S.etab.nom)}"></div>
+    <div class="field"><label for="et-service">Service</label><input class="input" id="et-service" data-etab="service" value="${esc(S.etab.service)}"></div>
+    <div class="field"><label for="et-unite">Unité / liste</label><input class="input" id="et-unite" data-etab="unite" value="${esc(S.etab.unite)}"></div>
+    <div class="field"><label for="et-uf">UF</label><input class="input" id="et-uf" data-etab="uf" value="${esc(S.etab.uf)}"></div>
+    <div class="field"><label for="et-acces">Code d\u2019accès des agents</label><input class="input num" id="et-acces" data-etab="acces" value="${esc(S.etab.acces)}"></div>
+    <div class="field"><label for="et-cadre">Code cadre</label><input class="input num" id="et-cadre" data-etab="accesCadre" value="${esc(S.etab.accesCadre||'')}"></div></div>
+    <div class="rules" style="margin-top:4px"><b style="color:var(--ink)">Règles</b><label>IDE min/jour <input class="input num" type="number" min="0" max="30" data-min="IDE" value="${S.mins.IDE||0}"></label><label>AS min/jour <input class="input num" type="number" min="0" max="30" data-min="AS" value="${S.mins.AS||0}"></label><label>Repos entre 2 postes <input class="input num" type="number" min="0" max="24" step="0.5" id="minRepos" value="${S.minRepos}"> h</label><label>Tolérance 70 h ± <input class="input num" id="tol" type="number" min="0" max="20" step="0.5" value="${S.tol}"> h</label></div>
+</section>
+    <h2 style="font-size:20px;font-weight:900;color:var(--navy);margin:24px 0 12px">Codes horaires <span class="hand" style="font-size:20px;color:var(--peach-deep);font-weight:700">ajouter, modifier</span></h2>${codesView().replace(/^\s*<div class="page-head">[\s\S]*?<\/h1><\/div><\/div>/,'')}`:''}
+  <div class="cols"><section class="panel"><h2>Installer l\u2019app</h2><p style="margin:0 0 10px">Ajoute PARAMED sur l\u2019écran d\u2019accueil de ton téléphone pour l\u2019ouvrir comme une vraie app.</p><button class="btn btn-peach" id="openTuto">Voir le tuto iPhone / Android</button></section>
+  <section class="panel"><h2>Un bug, une idée ?</h2><textarea class="input" id="bugMsg" style="width:100%" placeholder="Décris ce qui s\u2019est passé ou ton idée…" aria-label="Message"></textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-primary btn-sm" id="sendBug">Envoyer</button><button class="btn btn-ghost btn-sm" id="copyMail">Copier l\u2019adresse</button></div><p class="muted" style="margin:8px 0 0;font-size:12px">Ou écris à <b style="user-select:all">${esc(S.contact)}</b></p></section></div>`; }
+function codesView(){
+  return `<div class="page-head"><div><span class="sub">codes RH du service</span><h1>Codes horaires</h1></div></div>
+  <div class="banner info"><span>${STAR}</span><div><b>Horaires à compléter.</b>M10, S1PO et S2PO sont confirmés (10 h). Les postes 6J2J, 2A9G, 6G6G et les codes CHOS, CF, JS restent à préciser : la durée se calcule seule dès que tu saisis début et fin.</div></div>
+  <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Libellé</th><th>Début</th><th>Fin</th><th>Durée (h)</th><th>Compte dans les heures</th><th>Catégorie</th><th>Confirmé</th></tr></thead><tbody>
+  ${S.codes.map((c,i)=>`<tr><td><span class="chip k-${c.cat}">${esc(c.c)}</span></td><td><input class="input" data-ci="${i}" data-f="lib" value="${esc(c.lib)}" aria-label="Libellé"></td><td><input class="input" type="time" data-ci="${i}" data-f="deb" value="${esc(c.deb)}" aria-label="Début"></td><td><input class="input" type="time" data-ci="${i}" data-f="fin" value="${esc(c.fin)}" aria-label="Fin"></td><td><input class="input num" type="number" step="0.25" min="0" max="14" style="width:80px" data-ci="${i}" data-f="dur" value="${c.dur}" aria-label="Durée"></td><td><input type="checkbox" data-ci="${i}" data-f="compte" ${c.compte?'checked':''} aria-label="Compte"></td><td><select class="input" data-ci="${i}" data-f="cat" aria-label="Catégorie">${Object.entries(CATS).map(([k,l])=>`<option value="${k}" ${c.cat===k?'selected':''}>${l}</option>`).join('')}</select></td><td><input type="checkbox" data-ci="${i}" data-f="conf" ${c.conf?'checked':''} aria-label="Confirmé"></td></tr>`).join('')}
+  </tbody></table></div>
+  <form id="addCode" class="form-grid" style="margin-top:14px;align-items:end"><div class="field" style="margin:0"><label for="nc-c">Nouveau code</label><input class="input" id="nc-c" required placeholder="ex. N12"></div><div class="field" style="margin:0"><label for="nc-lib">Libellé</label><input class="input" id="nc-lib" required placeholder="Nuit"></div><div class="field" style="margin:0"><label for="nc-cat">Catégorie</label><select class="input" id="nc-cat">${Object.entries(CATS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div><button class="btn btn-peach" type="submit">Ajouter le code</button></form></section>`;
+}
+/* ----- Vues agent ----- */
+function myKpis(){
+  const c=checkAgent(S.plan,S.me,S.y,S.m); const today=new Date(); const cur=c.qs.find(q=>kOf(today)>=q.from&&kOf(today)<=q.to)||c.qs.find(q=>q.complete)||c.qs[0];
+  return `<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"><div class="kpi"><small>Heures du mois</small><b>${fmtH(c.mh.h)}</b></div>
+  <div class="kpi"><small>Quatorzaine ${cur?cur.label:''}</small><b>${cur?fmtH(cur.hrs):'—'} <em>/ 70h</em></b><div><span class="st ${cur&&cur.complete?qStatus(cur):'na'}">${cur?(cur.complete?((cur.ecart>0?'+':'')+fmtH(cur.ecart)):'partielle'):''}</span></div></div>
+  <div class="kpi"><small>Week-ends de repos</small><b>${c.we.ok} <em>/ ${c.we.total}</em></b><div><span class="st ${c.we.ok>=2?'ok':'bad'}">${c.we.ok>=2?'OK':'moins de 2'}</span></div></div>
+  <div class="kpi"><small>RECF à poser</small><b>${recf(S.me).solde}</b><div><span class="st na">${recf(S.me).acq} férié${recf(S.me).acq>1?'s':''} travaillé${recf(S.me).acq>1?'s':''}</span></div></div></div>`;
+}
+function monPlanningView(){
+  const y=S.y,m=S.m,n=dim(y,m); const pl=S.plan[S.me]||{}; const first=new Date(y,m,1); const off=(first.getDay()+6)%7;
+  let cells=''; let cur=null;
+  for(let d=1; d<=n; d++){ const dt=new Date(y,m,d); const k=K(y,m,d); const c=pl[k]; const w=isoWeek(dt).w; const we=dt.getDay()===0||dt.getDay()===6;
+    if(dt.getDay()===1||d===1){ if(cur!==w){ cells+=`<div class="wn">Semaine ${w}</div>`; if(d===1) for(let i=0;i<off;i++) cells+='<div class="day out"></div>'; cur=w; } }
+    cells+=`<button class="day ${we?'we':''} ${UI.selDay===k?'sel':''}" data-day="${k}"><span class="dn">${d}${ferie(k)?' <span class="fer">férié</span>':''}</span>${c?`<span class="code k-${catOf(c)}">${esc(c)}</span><span class="hrs">${esc(horaire(c))}</span>`:'<span class="hrs">—</span>'}</button>`; }
+  const sel=UI.selDay&&UI.selDay.startsWith(K(y,m,1).slice(0,7))?UI.selDay:null; const sc=sel?pl[sel]:null;
+  return `<div class="page-head"><div><span class="sub">bonjour ${esc(agent(S.me).prenom)}</span><h1>Mon planning</h1></div>${monthNav()}</div>
+  ${myKpis()}
+  ${sel?`<div class="banner info"><span>${STAR}</span><div style="flex:1"><b>${fmtDay(sel)} — ${sc?esc(sc)+' · '+esc((codeOf(sc)||{}).lib||''):'non planifié'}</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${sc&&isWorked(sc)?`<button class="btn btn-primary btn-sm" data-goswap="${sel}">Proposer un échange</button>`:''}<button class="btn btn-peach btn-sm" data-goconge="${sel}">Demander un congé</button></div></div></div>`:''}
+  <div class="cal">${['L','M','M','J','V','S','D'].map(x=>`<div class="dh">${x}</div>`).join('')}${cells}</div>
+
+  <div class="legend">${S.codes.filter(c=>Object.values(pl).includes(c.c)).map(c=>`<span><i class="k-${c.cat}"></i><b>${esc(c.c)}</b> ${esc(c.lib)} ${c.deb&&c.fin?esc(c.deb+'–'+c.fin):''}</span>`).join('')}</div>`;
+}
+function myWorkedDays(aid){ const pl=S.plan[aid]||{}; return Object.keys(pl).filter(k=>isWorked(pl[k])&&k.startsWith(K(S.y,S.m,1).slice(0,7))).sort(); }
+function echangesView(){
+  const me=agent(S.me); const mine=myWorkedDays(S.me); const sw=UI.swap; if(!sw.d1||!mine.includes(sw.d1)) sw.d1=mine[0];
+  const coll=S.agents.filter(a=>a.id!==S.me&&a.grade===me.grade); if(!sw.to||!coll.some(a=>a.id===sw.to)) sw.to=coll[0]&&coll[0].id;
+  const days=[]; for(let d=1;d<=dim(S.y,S.m);d++) days.push(K(S.y,S.m,d)); if(!sw.d2) sw.d2=sw.d1;
+  const draft={type:'echange',from:S.me,to:sw.to,d1:sw.d1,d2:sw.d2}; const ch=sw.to&&sw.d1?reqChecks(draft):{res:[],block:false};
+  const c1=(S.plan[S.me]||{})[sw.d1], c2=(S.plan[sw.to]||{})[sw.d2];
+  const recv=S.requests.filter(r=>r.type==='echange'&&r.to===S.me); const sent=S.requests.filter(r=>r.type==='echange'&&r.from===S.me);
+  return `<div class="page-head"><div><span class="sub">entre collègues</span><h1>Échanges</h1></div>${monthNav()}</div>
+  <div class="cols" style="margin-top:0">
+  <section class="panel"><h2>Proposer un échange</h2>
+    <div class="form-grid"><div class="field"><label for="sw-d1">Mon poste</label><select class="input" id="sw-d1">${mine.map(k=>`<option value="${k}" ${k===sw.d1?'selected':''}>${fmtShort(k)} · ${esc(S.plan[S.me][k])}</option>`).join('')}</select></div>
+    <div class="field"><label for="sw-to">Avec</label><select class="input" id="sw-to">${coll.map(a=>`<option value="${a.id}" ${a.id===sw.to?'selected':''}>${esc(fullName(a))}</option>`).join('')}</select></div>
+    <div class="field"><label for="sw-d2">Son jour</label><select class="input" id="sw-d2">${days.map(k=>`<option value="${k}" ${k===sw.d2?'selected':''}>${fmtShort(k)} · ${esc((S.plan[sw.to]||{})[k]||'—')}</option>`).join('')}</select></div></div>
+    <div class="swap"><div class="side"><small>Tu donnes</small><div><b>${sw.d1?fmtShort(sw.d1):'—'}</b> <span class="chip k-${catOf(c1)}">${esc(c1||'—')}</span></div></div><div class="arrow">⇄</div><div class="side"><small>Tu prends</small><div><b>${fmtShort(sw.d2)}</b> <span class="chip k-${catOf(c2)}">${esc(c2||'—')}</span></div></div></div>
+    <div class="req" style="background:var(--bg);border:0"><b style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Vérification automatique</b><div class="checks" style="display:flex;gap:6px;flex-wrap:wrap">${ch.res.map(x=>`<span class="st ${x.lvl}">${esc(x.txt)}</span>`).join('')}</div>${ch.block?'<div class="banner bad" style="margin:0"><span>⛔</span><div>Échange impossible : quelqu’un passerait sous 2 week-ends de repos.</div></div>':''}</div>
+    <button class="btn btn-primary" id="sendSwap" style="margin-top:12px" ${ch.block||!sw.to?'disabled':''}>Envoyer à ${esc(sw.to?agent(sw.to).prenom:'')}</button>
+    <p class="muted" style="font-size:12px">${esc(sw.to?agent(sw.to).prenom:'Ton collègue')} reçoit une notification, accepte, puis la cadre valide.</p>
+  </section>
+  <section class="panel"><h2>Reçues <span class="hand">${recv.filter(r=>r.status==='attente-collegue').length||''}</span></h2><div class="reqs">${recv.map(r=>reqCard(r,'collegue')).join('')||'<p class="empty-note">Aucune proposition reçue.</p>'}</div>
+  <h2 style="margin-top:18px">Envoyées</h2><div class="reqs">${sent.map(r=>reqCard(r,'')).join('')||'<p class="empty-note">Tu n’as rien envoyé.</p>'}</div></section></div>`;
+}
+function congesView(){
+  const cg=UI.conge; const first=K(S.y,S.m,1); if(!cg.du||!cg.du.startsWith(first.slice(0,7))) { cg.du=K(S.y,S.m,Math.min(19,dim(S.y,S.m))); cg.au=K(S.y,S.m,Math.min(21,dim(S.y,S.m))); }
+  if(cg.au<cg.du) cg.au=cg.du; cg.code=cg.code||'CA';
+  const draft={type:'conge',from:S.me,code:cg.code,du:cg.du,au:cg.au}; const ch=reqChecks(draft);
+  const before=quatorzaines(S.plan,S.me,S.y,S.m), after=quatorzaines(ch.p,S.me,S.y,S.m);
+  const pl=S.plan[S.me]||{}; let nb=0, d=parseK(cg.du); while(d<=parseK(cg.au)){ if(isWorked(pl[kOf(d)])||!pl[kOf(d)]) nb++; d=addDays(d,1); }
+  const sent=S.requests.filter(r=>r.type==='conge'&&r.from===S.me);
+  const conges=S.codes.filter(c=>c.cat==='conge');
+  return `<div class="page-head"><div><span class="sub">vacances & absences</span><h1>Congés</h1></div>${monthNav()}</div>
+  <div class="cols" style="margin-top:0"><section class="panel"><h2>Nouvelle demande</h2>
+    <div class="form-grid"><div class="field"><label for="cg-du">Du</label><input class="input" type="date" id="cg-du" value="${cg.du}"></div><div class="field"><label for="cg-au">Au</label><input class="input" type="date" id="cg-au" value="${cg.au}"></div><div class="field"><label for="cg-code">Type</label><select class="input" id="cg-code">${conges.map(c=>`<option value="${esc(c.c)}" ${c.c===cg.code?'selected':''}>${esc(c.c)} — ${esc(c.lib)}</option>`).join('')}</select></div></div>
+    <p style="margin:4px 0 10px"><b>${nb}</b> poste${nb>1?'s':''} remplacé${nb>1?'s':''} par ${esc(cg.code)} (${fmtH(hoursOf(cg.code))} chacun).</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Quatorzaine</th><th>Avant</th><th>Après</th><th>Objectif</th></tr></thead><tbody>${after.map((q,i)=>`<tr><td>${q.label}</td><td class="num">${fmtH(before[i].hrs)}</td><td class="num"><span class="st ${q.complete?qStatus(q):'na'}">${fmtH(q.hrs)}</span></td><td class="num">${q.complete?'70h':'partielle'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="checks" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${ch.res.filter(x=>x.txt.includes('WE')).map(x=>`<span class="st ${x.lvl}">${esc(x.txt)}</span>`).join('')}</div>
+    ${ch.block?'<div class="banner bad" style="margin-top:10px"><span>⛔</span><div>Demande impossible : tu passerais sous 2 week-ends de repos.</div></div>':''}
+    <button class="btn btn-primary" id="sendConge" style="margin-top:12px" ${ch.block||nb===0?'disabled':''}>Envoyer à la cadre</button>
+  </section>
+  <section class="panel"><h2>Mes demandes</h2><div class="reqs">${sent.map(r=>reqCard(r,'')).join('')||'<p class="empty-note">Aucune demande pour l’instant.</p>'}</div></section></div>`;
+}
+function serviceView(){
+  return `<div class="page-head"><div><span class="sub">lecture seule</span><h1>Planning du service</h1></div>${periodNav()}</div><div class="toolbar">${modeSeg()}</div>${gridHTML(true)}
+  <div class="legend">${Object.entries(CATS).map(([k,l])=>`<span><i class="k-${k}"></i>${l}</span>`).join('')}</div>`;
+}
+
+/* ----- Aperçu impression ----- */
+function printView(){
+  const y=S.y,m=S.m,n=dim(y,m); const days=[]; for(let d=1;d<=n;d++){const dt=new Date(y,m,d); days.push({d,k:K(y,m,d),dow:dt.getDay(),w:isoWeek(dt).w});}
+  const weeks=[]; days.forEach(x=>{const l=weeks[weeks.length-1]; if(l&&l.w===x.w) l.n++; else weeks.push({w:x.w,n:1});});
+  const used=new Set(); S.agents.forEach(a=>days.forEach(x=>{const c=(S.plan[a.id]||{})[x.k]; if(c) used.add(c);}));
+  const now=new Date(); const stamp=`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} à ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  return `<div class="overlay" role="dialog" aria-label="Aperçu impression"><div class="overlay-bar"><p>Aperçu A4 paysage</p><div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" id="btnPrint">Imprimer</button><button class="btn btn-peach btn-sm" id="closePreview">Fermer</button></div></div>
+  <div class="overlay-scroll"><div class="sheet">
+    <div class="sh"><div><h2>PLANNING MENSUEL — ${MOIS[m].toUpperCase()} ${y}</h2><p>${esc(S.etab.nom)} · ${esc(S.etab.service)} · ${esc(S.etab.unite)} · UF ${esc(S.etab.uf)}</p></div><div style="display:flex;align-items:center;gap:8px">${MARK(30)}<b style="color:#2F547F;letter-spacing:.06em">PARAMED</b></div></div>
+    <table><thead><tr><th class="n" rowspan="2">Nom</th><th rowspan="2">Poste</th>${weeks.map(w=>`<th colspan="${w.n}">S ${w.w}</th>`).join('')}</tr><tr>${days.map(x=>`<th class="${x.dow===0||x.dow===6?'w':''}">${JL[x.dow]}<br>${pad(x.d)}</th>`).join('')}</tr></thead>
+    <tbody>${S.agents.map(a=>`<tr><td class="n">${esc(a.nom)} ${esc(a.prenom)}</td><td>${esc(a.grade)}</td>${days.map(x=>{const c=(S.plan[a.id]||{})[x.k]; return `<td class="${c?'pk-'+catOf(c):(x.dow===0||x.dow===6?'w':'')}">${esc(c||'')}</td>`;}).join('')}</tr>`).join('')}</tbody></table>
+    <div class="lg">${S.codes.filter(c=>used.has(c.c)).map(c=>`<span><b class="pk-${c.cat}">${esc(c.c)}</b>${esc(c.lib)}${c.deb&&c.fin?' '+esc(c.deb+'–'+c.fin):''}</span>`).join('')}</div>
+    <div class="foot"><span>Édité le ${stamp}</span><span>Affiché le : ____ / ____ / ________</span><span>Sous réserve de modification, merci.</span></div>
+  </div></div></div>`;
+}
+
+/* ---------- Popover cellule ---------- */
+function closePop(){ const p=document.getElementById('pop'); if(p) p.remove(); UI.pop=null; }
+function openPop(btn){
+  closePop(); const aid=btn.dataset.a, k=btn.dataset.k; const a=agent(aid); const cur=(S.plan[aid]||{})[k]; const note=(S.notes[aid]||{})[k]||'';
+  const p=document.createElement('div'); p.className='pop'; p.id='pop';
+  p.innerHTML=`<h5><b>${esc(fullName(a))}</b> · ${fmtDay(k)}</h5><div class="codes">${S.codes.map(c=>`<button class="chip k-${c.cat}" data-set="${esc(c.c)}" aria-pressed="${cur===c.c}" title="${esc(c.lib)}">${esc(c.c)}</button>`).join('')}</div>
+  <div class="acts"><input class="input" id="popNote" placeholder="Note (ex. doublure)" value="${esc(note)}"><button class="btn btn-ghost btn-sm" data-set="">Vider</button></div>`;
+  document.body.appendChild(p);
+  if(window.innerWidth<700){ p.classList.add('sheetpop'); }
+  else { const r=btn.getBoundingClientRect(); let left=r.left+window.scrollX; const w=290; if(left+w>document.documentElement.clientWidth-8) left=document.documentElement.clientWidth-w-8; if(left<8) left=8;
+  p.style.left=left+'px'; p.style.top=(r.bottom+window.scrollY+6)+'px'; }
+  p.addEventListener('click',e=>{ const b=e.target.closest('[data-set]'); if(!b) return; setCell(aid,k,b.dataset.set||null); saveNote(aid,k,document.getElementById('popNote').value); closePop(); render(); });
+  p.querySelector('#popNote').addEventListener('keydown',e=>{ if(e.key==='Enter'){ saveNote(aid,k,e.target.value); closePop(); render(); }});
+  UI.pop=p; const first=p.querySelector('[aria-pressed="true"]')||p.querySelector('.chip'); first&&first.focus();
+}
+function setCell(aid,k,code){ S.plan[aid]=S.plan[aid]||{}; if(code) S.plan[aid][k]=code; else delete S.plan[aid][k]; queueCell(aid,k); }
+function saveNote(aid,k,v){ S.notes[aid]=S.notes[aid]||{}; v=(v||'').trim(); const old=S.notes[aid][k]||''; if(v) S.notes[aid][k]=v; else delete S.notes[aid][k]; if(old!==v) queueCell(aid,k); }
+
+/* ---------- Actions ---------- */
+function prefill(){ let n=0; S.agents.forEach(a=>{ if(!a.cycle||!a.cycle.codes.length) return; const st=parseK(a.cycle.start), L=a.cycle.codes.length; for(let d=1; d<=dim(S.y,S.m); d++){ const dt=new Date(S.y,S.m,d), k=kOf(dt); if((S.plan[a.id]||{})[k]) continue; const diff=Math.round((dt-st)/864e5); const c=a.cycle.codes[((diff%L)+L)%L]; if(c){ S.plan[a.id]=S.plan[a.id]||{}; S.plan[a.id][k]=c; queueCell(a.id,k); n++; } } }); return n; }
+function downloadIcs(){
+  const pl=S.plan[S.me]||{}; const today=kOf(new Date()); const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PARAMED//FR','CALSCALE:GREGORIAN','X-WR-CALNAME:PARAMED'];
+  Object.keys(pl).sort().forEach(k=>{ if(k<today) return; const c=codeOf(pl[k]); if(!c||!WORKED.includes(c.cat)) return; const d=k.replace(/-/g,'');
+    L.push('BEGIN:VEVENT','UID:'+S.me+'-'+d+'@paramed','DTSTAMP:'+stamp,'SUMMARY:'+c.c+' · '+c.lib);
+    if(c.deb&&c.fin){ const e=c.fin<=c.deb?kOf(addDays(parseK(k),1)).replace(/-/g,''):d; L.push('DTSTART:'+d+'T'+c.deb.replace(':','')+'00','DTEND:'+e+'T'+c.fin.replace(':','')+'00'); }
+    else L.push('DTSTART;VALUE=DATE:'+d,'DTEND;VALUE=DATE:'+kOf(addDays(parseK(k),1)).replace(/-/g,''));
+    L.push('LOCATION:'+S.etab.nom+' – '+S.etab.service,'END:VEVENT'); });
+  L.push('END:VCALENDAR');
+  if(L.length<7){ toast('Aucun poste à venir à ajouter.'); return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([L.join('\r\n')],{type:'text/calendar'})); a.download='paramed-planning.ics'; document.body.appendChild(a); a.click(); a.remove();
+}
+function etabPayload(){ return {nom:S.etab.nom, service:S.etab.service, unite:S.etab.unite, uf:S.etab.uf, acces:S.etab.acces, accesCadre:S.etab.accesCadre, minIDE:S.mins.IDE||0, minAS:S.mins.AS||0, minRepos:S.minRepos, tol:S.tol}; }
+function saveEtab(){ setSync('saving'); api('saveEtab',{etab:etabPayload()}).then(()=>setSync('ok'),e=>{ setSync('err'); toast(e.message); }); }
+function saveAgent(a, fields, msg){ Object.assign(a, fields); setSync('saving'); api('saveAgent',{agent:Object.assign({id:a.id}, fields)}).then(()=>{ setSync('ok'); if(msg) toast(msg); },e=>{ setSync('err'); toast(e.message); }); }
+async function logout(){ await flushCells(); bg('logout'); setToken(null); S.me=null; S.admin=false; UI.notifOpen=false; UI.tutoDone=false; S.view=null; render(); }
+function bindApp(){
+  const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+  $('#logout').onclick=$('#avatarBtn').onclick=logout;
+  $('#bell').onclick=e=>{ e.stopPropagation(); UI.notifOpen=!UI.notifOpen; if(!UI.notifOpen) markRead(); render(); };
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{ S.view=b.dataset.tab; UI.notifOpen=false; render(); window.scrollTo(0,0); });
+  $$('[data-wnav]').forEach(b=>b.onclick=()=>{ UI.wk=kOf(addDays(parseK(weekStart()),7*(+b.dataset.wnav))); const th=addDays(parseK(UI.wk),3); S.y=th.getFullYear(); S.m=th.getMonth(); render(); });
+  $$('[data-mode]').forEach(b=>b.onclick=()=>{ UI.mode=b.dataset.mode; render(); });
+  $$('[data-mnav]').forEach(b=>b.onclick=()=>{ UI.wk=null; S.m+=+b.dataset.mnav; if(S.m<0){S.m=11;S.y--;} if(S.m>11){S.m=0;S.y++;} render(); });
+  $$('[data-filter]').forEach(b=>b.onclick=()=>{ UI.filter=b.dataset.filter; render(); });
+  $$('[data-brush]').forEach(b=>b.onclick=()=>{ const v=b.dataset.brush; UI.brush = (v && UI.brush!==v) ? v : null; render(); });
+  $$('.cell:not(.ro)').forEach(b=>b.onclick=e=>{ e.stopPropagation(); if(UI.brush){ setCell(b.dataset.a,b.dataset.k,UI.brush==='__erase'?null:UI.brush); const y=window.scrollY; render(); window.scrollTo(0,y); setSync('saving'); } else openPop(b); });
+  const tol=$('#tol'); if(tol) tol.onchange=()=>{ S.tol=Math.max(0,+tol.value||0); saveEtab(); render(); };
+  $$('[data-min]').forEach(i=>i.onchange=()=>{ S.mins[i.dataset.min]=Math.max(0,+i.value||0); saveEtab(); render(); });
+  const mr=$('#minRepos'); if(mr) mr.onchange=()=>{ S.minRepos=Math.max(0,+mr.value||0); saveEtab(); render(); };
+  const bf=$('#btnFill'); if(bf) bf.onclick=()=>{ const n=prefill(); render(); if(n){ flushCells(); toast(`${n} cases remplies avec les roulements.`); } else toast('Rien à remplir : les cases sont déjà prises.'); };
+  $$('[data-role]').forEach(s=>s.onchange=()=>saveAgent(agent(s.dataset.role),{admin:s.value==='admin'}, s.value==='admin'?'Droits de cadre adjointe donnés.':'Droits retirés.'));
+  $$('[data-cyc]').forEach(b=>b.onclick=()=>{ UI.cyc=UI.cyc===b.dataset.cyc?null:b.dataset.cyc; render(); });
+  const cyCopy=$('#cy-copy'); if(cyCopy) cyCopy.onclick=()=>{ const st=parseK($('#cy-start').value); const n=7*(+$('#cy-weeks').value); const pl=S.plan[UI.cyc]||{}; const out=[]; for(let i=0;i<n;i++) out.push(pl[kOf(addDays(st,i))]||'RH'); $('#cy-codes').value=out.join(' '); };
+  const cySave=$('#cy-save'); if(cySave) cySave.onclick=()=>{ const codes=$('#cy-codes').value.trim().toUpperCase().split(/\s+/).filter(Boolean); const bad=codes.filter(c=>!codeOf(c)); if(bad.length){ toast('Code inconnu : '+bad[0]); return; } if(!$('#cy-start').value){ toast('Choisis une date de début.'); return; } const a=agent(UI.cyc); UI.cyc=null; saveAgent(a,{cycle:{start:$('#cy-start').value, codes}},'Roulement enregistré.'); render(); };
+  const cyDel=$('#cy-del'); if(cyDel) cyDel.onclick=()=>{ const a=agent(UI.cyc); UI.cyc=null; saveAgent(a,{cycle:null},'Roulement supprimé.'); render(); };
+  const cyClose=$('#cy-close'); if(cyClose) cyClose.onclick=()=>{ UI.cyc=null; render(); };
+  ['modifs','email'].forEach(f=>{ const el=document.getElementById('nf-'+f); if(el) el.onchange=()=>{ const a=agent(S.me); a.notif=a.notif||{}; a.notif[f]=el.checked; bg('updateMe', f==='modifs'?{notifModifs:el.checked}:{notifEmail:el.checked}, el.checked?'Activé.':'Désactivé.'); }; });
+  $$('[data-os]').forEach(b=>b.onclick=()=>{ UI.tutoOs=b.dataset.os; render(); });
+  const to=$('#tutoOk'); if(to) to.onclick=()=>{ UI.tuto=false; const a=agent(S.me); if(a && !a.tutoVu){ a.tutoVu=true; bg('updateMe',{tutoVu:true}); } render(); };
+  const ot=$('#openTuto'); if(ot) ot.onclick=()=>{ UI.tuto=true; render(); };
+  const cm=$('#copyMail'); if(cm) cm.onclick=()=>{ try{ navigator.clipboard.writeText(S.contact).then(()=>toast('Adresse copiée.'),()=>toast('Sélectionne l\u2019adresse pour la copier.')); }catch(e){ toast('Sélectionne l\u2019adresse pour la copier.'); } };
+  const sb=$('#sendBug'); if(sb) sb.onclick=()=>{ const m=$('#bugMsg').value.trim(); if(!m){ toast('Écris ton message d\u2019abord.'); return; } sb.disabled=true; bg('reportBug',{message:m+'\n\n('+navigator.userAgent+')'},'Merci, message envoyé.').then(()=>{ const t=$('#bugMsg'); if(t) t.value=''; sb.disabled=false; }); };
+  $$('[data-etab]').forEach(i=>i.onchange=()=>{ S.etab[i.dataset.etab]=i.value.trim(); saveEtab(); render(); });
+  const pms=$('#pmSave'); if(pms) pms.onclick=()=>{ const p=$('#pm-pass').value; act('updateMe', Object.assign({email:$('#pm-mail').value.trim()}, p?{password:p}:{}), 'Compte mis à jour.'); };
+  const bi=$('#btnIcs'); if(bi) bi.onclick=downloadIcs;
+  const pv=$('#btnPreview'); if(pv) pv.onclick=()=>{ UI.preview=true; render(); };
+  const cp=$('#closePreview'); if(cp) cp.onclick=()=>{ UI.preview=false; render(); };
+  const pr=$('#btnPrint'); if(pr) pr.onclick=()=>window.print();
+  const pb=$('#btnPublish'); if(pb) pb.onclick=async()=>{ pb.disabled=true; await flushCells(); act('publish',{mois:K(S.y,S.m,1).slice(0,7)},'Planning publié, les agents sont prévenus.'); };
+  // demandes
+  $$('[data-valid]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await flushCells(); act('decideRequest',{id:b.dataset.valid, accept:true},'Demande validée, planning mis à jour.'); });
+  $$('[data-refuse]').forEach(b=>b.onclick=()=>{ b.disabled=true; const r=S.requests.find(x=>x.id===b.dataset.refuse); act(r.status==='attente-collegue'?'answerRequest':'decideRequest',{id:r.id, accept:false},'Demande refusée.'); });
+  $$('[data-accept]').forEach(b=>b.onclick=()=>{ b.disabled=true; act('answerRequest',{id:b.dataset.accept, accept:true},'Accepté. La cadre est prévenue.'); });
+  // équipe
+  $$('[data-grade]').forEach(s=>s.onchange=()=>{ saveAgent(agent(s.dataset.grade),{grade:s.value}); S.agents=S.allAgents.filter(a=>a.grade!=='CADRE'); });
+  $$('[data-quot]').forEach(s=>s.onchange=()=>saveAgent(agent(s.dataset.quot),{quotite:+s.value}));
+  const aa=$('#addAgent'); if(aa) aa.onsubmit=async e=>{ e.preventDefault(); setBusy(true); try{ await api('addAgent',{nom:$('#ad-nom').value.trim(), prenom:$('#ad-prenom').value.trim(), grade:$('#ad-grade').value}); await act('state',{}, 'Agent ajouté.'); }catch(err){ toast(err.message); } finally{ setBusy(false); } };
+  // codes
+  $$('[data-ci]').forEach(inp=>inp.onchange=()=>{ const c=S.codes[+inp.dataset.ci]; const f=inp.dataset.f; c[f]= inp.type==='checkbox'?inp.checked:(f==='dur'?+inp.value:inp.value);
+    if((f==='deb'||f==='fin')&&c.deb&&c.fin){ let [h1,m1]=c.deb.split(':').map(Number),[h2,m2]=c.fin.split(':').map(Number); let dd=(h2*60+m2)-(h1*60+m1); if(dd<=0) dd+=1440; c.dur=Math.round(dd/15)/4; }
+    queueCodes(); render(); });
+  const ac=$('#addCode'); if(ac) ac.onsubmit=e=>{ e.preventDefault(); const c=$('#nc-c').value.trim().toUpperCase(); if(codeOf(c)){ toast('Ce code existe déjà.'); return; } const cat=$('#nc-cat').value; S.codes.push({c, lib:$('#nc-lib').value.trim(), deb:'', fin:'', dur:WORKED.includes(cat)?7.5:0, compte:WORKED.includes(cat)||cat==='conge', cat, conf:false}); queueCodes(); render(); toast('Code ajouté.'); };
+  // agent
+  $$('[data-day]').forEach(b=>b.onclick=()=>{ UI.selDay=UI.selDay===b.dataset.day?null:b.dataset.day; render(); });
+  $$('[data-goswap]').forEach(b=>b.onclick=()=>{ UI.swap.d1=b.dataset.goswap; UI.swap.d2=b.dataset.goswap; S.view='echanges'; render(); });
+  $$('[data-goconge]').forEach(b=>b.onclick=()=>{ UI.conge.du=b.dataset.goconge; UI.conge.au=b.dataset.goconge; S.view='conges'; render(); });
+  ['sw-d1','sw-to','sw-d2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.onchange=()=>{ UI.swap[id.slice(3)]=el.value; if(id==='sw-d1') UI.swap.d2=el.value; render(); }; });
+  const ss=$('#sendSwap'); if(ss) ss.onclick=()=>{ ss.disabled=true; const sw=UI.swap; act('createRequest',{type:'echange', to:sw.to, d1:sw.d1, d2:sw.d2}, `Demande envoyée à ${agent(sw.to).prenom}.`); };
+  ['cg-du','cg-au','cg-code'].forEach(id=>{ const el=document.getElementById(id); if(el) el.onchange=()=>{ UI.conge[id.slice(3)]=el.value; if(id==='cg-du'&&UI.conge.au<el.value) UI.conge.au=el.value; render(); }; });
+  const sc=$('#sendConge'); if(sc) sc.onclick=()=>{ sc.disabled=true; const cg=UI.conge; act('createRequest',{type:'conge', code:cg.code, du:cg.du, au:cg.au}, 'Demande envoyée à la cadre.'); };
+}
+function markRead(){ if(S.notifs.some(n=>!n.read)){ S.notifs.forEach(n=>n.read=true); bg('markRead'); } }
+document.addEventListener('click',e=>{ if(UI.pop&&!e.target.closest('#pop')) closePop(); if(UI.notifOpen&&!e.target.closest('#notifPop')&&!e.target.closest('#bell')){ UI.notifOpen=false; markRead(); render(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(UI.pop) closePop(); if(UI.preview||UI.tuto){ if(UI.tuto){ const a=agent(S.me); if(a&&!a.tutoVu){ a.tutoVu=true; bg('updateMe',{tutoVu:true}); } } UI.preview=false; UI.tuto=false; render(); } } });
+boot();
+</script>
+</body>
+</html>
