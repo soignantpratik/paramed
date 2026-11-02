@@ -177,6 +177,9 @@ main{padding-top:20px}
 .banner{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;margin-bottom:12px;font-size:13px}
 .banner.bad{background:var(--bad-soft);color:var(--bad)}
 .banner.ok{background:var(--ok-soft);color:var(--ok)}
+.banner.warn{background:var(--warn-soft);color:var(--warn)}
+.banner.warn b,.banner.warn div{color:var(--ink)}
+.banner.warn>div>b{color:var(--warn)}
 .banner.info{background:var(--peach-soft);color:var(--ink)}
 .banner b{display:block}
 
@@ -306,7 +309,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:13px}
 .type-sample .c{font-family:var(--f-hand);font-size:30px;color:var(--peach-deep);line-height:1}
 
 /* ---------- Print preview ---------- */
-.overlay{position:fixed;inset:0;z-index:40;background:rgba(17,25,35,.94);display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.overlay{position:fixed;inset:0;z-index:40;background:#141C27;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
 .overlay-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;color:#fff;margin-bottom:10px;flex-wrap:wrap}
 .overlay-bar p{margin:0;font-size:13px}
 .overlay-scroll{overflow:auto;flex:1}
@@ -316,7 +319,11 @@ table.tbl{border-collapse:collapse;width:100%;font-size:13px}
 .sheet .sh p{margin:2px 0 0;font-size:12px;color:#55606f}
 .sheet table{border-collapse:collapse;width:100%;font-size:10px}
 .sheet th,.sheet td{border:1px solid #c9ced6;text-align:center;padding:3px 1px}
-.sheet th.n,.sheet td.n{text-align:left;padding-left:6px;white-space:nowrap}
+.sheet table{table-layout:fixed;background:#fff}
+.sheet th.n,.sheet td.n{text-align:left;padding:3px 4px 3px 6px;width:150px;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
+.sheet th.p,.sheet td.p{width:34px}
+.sheet td{font-size:9px;letter-spacing:-.2px;overflow:hidden;white-space:nowrap}
+.sheet td.n{font-size:10px;letter-spacing:0}
 .sheet .w{background:#f1ece6}
 .sheet .foot{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;color:#55606f;gap:20px}
 .sheet .lg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;font-size:10px}
@@ -603,7 +610,7 @@ function render(){
       </div>
       <div class="user"><button class="avatar" id="avatarBtn" aria-label="Se déconnecter">${esc((me.prenom[0]||'')+(me.nom[0]||''))}</button><span class="who"><b>${esc(me.prenom)} ${esc(me.nom)}</b><small>${pureCadre?'Cadre de santé':esc(me.grade)+(adminAgent?' · admin':'')}</small></span><button class="btn btn-ghost btn-sm" id="logout">Déconnexion</button></div>
     </div>
-    <nav class="tabs" role="tablist">${tabs.map(([k,l,sh])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.view===k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg><span class="tl">${l}</span><span class="ts">${sh}</span>${k==='demandes'&&pend?`<span class="pill">${pend}</span>`:''}${k==='echanges'&&recv?`<span class="pill">${recv}</span>`:''}</button>`).join('')}</nav>
+    <nav class="tabs" role="tablist">${tabs.map(([k,l,sh])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.view===k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg><span class="tl">${l}</span><span class="ts">${sh}</span>${k==='demandes'&&pend?`<span class="pill">${pend}</span>`:''}${k==='planning'&&S.admin&&unpubCount()?`<span class="pill" title="Modifications non republiées">!</span>`:''}${k==='echanges'&&recv?`<span class="pill">${recv}</span>`:''}</button>`).join('')}</nav>
   </header>
   <main>${({planning:planningView,demandes:demandesView,equipe:equipeView,codes:codesView,parametres:parametresView,monplanning:monPlanningView,echanges:echangesView,conges:congesView,service:serviceView})[S.view]()}</main>
   <p class="foot-note">Un bug, une idée ? Écris à <b style="user-select:all">${esc(S.contact)}</b><br>PARAMED · © Léa CAVADASKI — Soignant Pratik</p>
@@ -692,24 +699,27 @@ function gridHTML(readonly){
     <thead><tr class="wk"><th class="name first" rowspan="2" style="vertical-align:bottom;padding-bottom:8px">Agent</th>${weeks.map((w,i)=>`<th colspan="${w.n}" class="${i===0?'first':''}">S${w.w}</th>`).join('')}${wkMode?'':'<th colspan="3" style="border-left:2px solid var(--line)">Compteurs</th>'}</tr>
     <tr class="days">${days.map((x,i)=>`<th class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} ${ferie(x.k)?'fer':''}" ${ferie(x.k)?`title="${esc(ferie(x.k))}"`:''}><span>${ferie(x.k)?'férié':JL[x.dow]}</span><b class="num">${pad(x.d)}</b></th>`).join('')}${wkMode?'':'<th style="border-left:2px solid var(--line);padding:0 8px">Mois</th><th style="padding:0 8px">Écart 70h</th><th style="padding:0 8px">WE off</th>'}</tr></thead>
     <tbody>${body}</tbody>
-    <tfoot>${Object.entries(S.mins).filter(([g,mn])=>mn&&S.agents.some(a=>a.grade===g)).map(([g,mn])=>`<tr class="effmin"><th class="name">${g} présents (min ${mn})</th>${days.map((x,i)=>{ const has=S.agents.some(a=>getCode(S.plan,a.id,x.k)); const v=effectif(S.plan,x.k,g); return `<td class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} num ${has&&v<mn?'under':''}">${has?v:''}</td>`; }).join('')}${xcTd}</tr>`).join('')}<tr><th class="name">Effectif matin / jour</th>${eff('matin')}${xcTd}</tr><tr><th class="name">Effectif soir</th>${eff('soir')}${xcTd}</tr></tfoot>
+    <tfoot>${Object.entries(S.mins).filter(([g,mn])=>mn&&S.agents.some(a=>a.grade===g)).map(([g,mn])=>`<tr class="effmin"><th class="name" title="Minimum : ${mn} ${g} par jour">TOTAL ${g}</th>${days.map((x,i)=>{ const has=S.agents.some(a=>getCode(S.plan,a.id,x.k)); const v=effectif(S.plan,x.k,g); return `<td class="${x.dow===0||x.dow===6?'we':''} ${x.dow===1&&i>0?'wkstart':''} num ${has&&v<mn?'under':''}">${has?v:''}</td>`; }).join('')}${xcTd}</tr>`).join('')}</tfoot>
   </table></div>`;
 }
 
+function unpubCount(){ const mk=K(S.y,S.m,1).slice(0,7); const pub=S.published[mk]; if(!pub) return 0; const mm=/(\d{2})\/(\d{2})\/(\d{4})\D+(\d{2}):(\d{2})/.exec(pub); const iso=mm?`${mm[3]}-${mm[2]}-${mm[1]}T${mm[4]}:${mm[5]}`:''; return S.history.filter(h=>h.k.startsWith(mk)&&String(h.at).replace(' ','T')>iso).length + PEND.filter(x=>x.date.startsWith(mk)).length; }
 function planningView(){
   const y=S.y,m=S.m; const checks=S.agents.map(a=>({a,c:checkAgent(S.plan,a.id,y,m)}));
   const blocking=checks.filter(x=>x.c.out.some(o=>o.block)); const mk=K(y,m,1).slice(0,7); const pub=S.published[mk];
   const staff=staffIssues(S.plan,y,m); const staffAlerts=[]; Object.keys(S.mins).forEach(g=>{ const l=staff.filter(x=>x.g===g); if(l.length) staffAlerts.push({lvl:'bad', a:null, who:'Service', txt:`moins de ${S.mins[g]} ${g} : ${l.map(x=>`${fmtShort(x.k)} (${x.n})`).join(', ')}`}); });
   const alerts=staffAlerts.concat(checks.flatMap(x=>x.c.out.map(o=>({...o,a:x.a})))).sort((p,q)=>(q.block?1:0)-(p.block?1:0));
   const hist=S.history.filter(h=>h.k.startsWith(mk));
+  const pubIso = pub ? (m=>m?`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}`:'')(/(\d{2})\/(\d{2})\/(\d{4})\D+(\d{2}):(\d{2})/.exec(pub)) : '';
+  const unpub = pub ? hist.filter(h=>String(h.at).replace(' ','T')>pubIso).length + PEND.filter(x=>x.date.startsWith(mk)).length : 0;
   const canFill=S.agents.some(a=>a.cycle&&a.cycle.codes.length);
   const qRows=S.agents.map(a=>{ const qs=checkAgent(S.plan,a.id,y,m).qs; return `<tr><td>${esc(a.prenom)} ${esc(a.nom)}</td>${qs.map(q=>`<td class="num"><span class="st ${q.complete?qStatus(q):'na'}">${fmtH(q.hrs)}</span>${q.complete?'':' <small class="muted">partielle</small>'}</td>`).join('')}</tr>`; }).join('');
   const qHead=S.agents.length?checkAgent(S.plan,S.agents[0].id,y,m).qs.map(q=>`<th>${q.label}</th>`).join(''):'';
   return `
   <div class="page-head"><div><span class="sub">planning ${UI.mode==='semaine'?'de la semaine':'mensuel'}</span><h1>${esc(S.etab.service||'Planning')}</h1></div>${periodNav()}<div class="spacer"></div>
     ${canFill?'<button class="btn btn-ghost" id="btnFill">Pré-remplir</button>':''}<button class="btn btn-ghost" id="btnPreview">Imprimer</button>
-    <button class="btn btn-primary" id="btnPublish" ${blocking.length?'disabled':''}>${pub?'Republier':'Publier le planning'}</button></div>
-  ${blocking.length?`<div class="banner bad"><span>⛔</span><div><b>Publication bloquée : ${blocking.length} agent${blocking.length>1?'s n’ont':' n’a'} pas 2 week-ends de repos.</b>${blocking.map(x=>esc(fullName(x.a))).join(', ')}</div></div>`:(pub?`<div class="banner ok"><span>✓</span><div><b>Planning publié le ${esc(pub)}.</b>Les agents ont été prévenus.</div></div>`:'')}
+    <button class="btn btn-primary" id="btnPublish" ${blocking.length?'disabled':''}>${pub?(unpub?`Republier (${unpub})`:'Republier'):'Publier le planning'}</button></div>
+  ${blocking.length?`<div class="banner bad"><span>⛔</span><div><b>Publication bloquée : ${blocking.length} agent${blocking.length>1?'s n’ont':' n’a'} pas 2 week-ends de repos.</b>${blocking.map(x=>esc(fullName(x.a))).join(', ')}</div></div>`:(pub?(unpub?`<div class="banner warn"><span>⚠️</span><div style="flex:1"><b>${unpub} modification${unpub>1?'s':''} depuis la publication du ${esc(pub)}, pas encore republiée${unpub>1?'s':''}.</b>Les agents concernés ont reçu une alerte, mais le planning affiché comme officiel n\u2019est pas à jour.<div style="margin-top:8px"><button class="btn btn-primary btn-sm" id="btnRepub">Republier maintenant</button></div></div></div>`:`<div class="banner ok"><span>✓</span><div><b>Planning publié le ${esc(pub)}.</b>Les agents ont été prévenus.</div></div>`):`<div class="banner info"><span>${STAR}</span><div><b>Planning pas encore publié.</b>Les agents le voient déjà, mais ne sont prévenus qu\u2019à la publication.</div></div>`)}
   <div class="toolbar">${modeSeg()}
     <div class="seg" role="group" aria-label="Filtrer">${['tous','IDE','AS','CS'].map(g=>`<button data-filter="${g}" aria-pressed="${UI.filter===g}">${g==='tous'?'Tous':g}</button>`).join('')}</div>
   </div>
@@ -876,8 +886,8 @@ function sheetHTML(){
   const now=new Date(); const stamp=`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} à ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   return `<div class="sheet">
     <div class="sh"><div><h2>PLANNING MENSUEL — ${MOIS[m].toUpperCase()} ${y}</h2><p>${esc(S.etab.nom)} · ${esc(S.etab.service)}${S.etab.uf?' · UF '+esc(S.etab.uf):''}</p></div><div style="display:flex;align-items:center;gap:8px">${MARK(30)}<b style="color:#2F547F;letter-spacing:.06em">PARAMED</b></div></div>
-    <table><thead><tr><th class="n" rowspan="2">Nom</th><th rowspan="2">Poste</th>${weeks.map(w=>`<th colspan="${w.n}">S ${w.w}</th>`).join('')}</tr><tr>${days.map(x=>`<th class="${x.dow===0||x.dow===6?'w':''}">${JL[x.dow]}<br>${pad(x.d)}</th>`).join('')}</tr></thead>
-    <tbody>${S.agents.map(a=>`<tr><td class="n">${esc(a.nom)} ${esc(a.prenom)}</td><td>${esc(a.grade)}</td>${days.map(x=>{const c=(S.plan[a.id]||{})[x.k]; return `<td class="${c?'pk-'+catOf(c):(x.dow===0||x.dow===6?'w':'')}">${esc(c||'')}</td>`;}).join('')}</tr>`).join('')}</tbody></table>
+    <table><thead><tr><th class="n" rowspan="2">Nom</th><th class="p" rowspan="2">Poste</th>${weeks.map(w=>`<th colspan="${w.n}">S ${w.w}</th>`).join('')}</tr><tr>${days.map(x=>`<th class="${x.dow===0||x.dow===6?'w':''}">${JL[x.dow]}<br>${pad(x.d)}</th>`).join('')}</tr></thead>
+    <tbody>${S.agents.map(a=>`<tr><td class="n">${esc(a.nom)} ${esc(a.prenom)}</td><td class="p">${esc(a.grade)}</td>${days.map(x=>{const c=(S.plan[a.id]||{})[x.k]; return `<td class="${c?'pk-'+catOf(c):(x.dow===0||x.dow===6?'w':'')}">${esc(c||'')}</td>`;}).join('')}</tr>`).join('')}</tbody></table>
     <div class="lg">${S.codes.filter(c=>used.has(c.c)).map(c=>`<span><b class="pk-${c.cat}">${esc(c.c)}</b>${esc(c.lib)}${c.deb&&c.fin?' '+esc(c.deb+'–'+c.fin):''}</span>`).join('')}</div>
     <div class="foot"><span>Édité le ${stamp}</span><span>Affiché le : ____ / ____ / ________</span><span>Sous réserve de modification, merci.</span></div>
   </div>`;
@@ -954,6 +964,7 @@ function bindApp(){
   const pv=$('#btnPreview'); if(pv) pv.onclick=()=>{ UI.preview=true; render(); };
   const cp=$('#closePreview'); if(cp) cp.onclick=()=>{ UI.preview=false; render(); };
   const pr=$('#btnPrint'); if(pr) pr.onclick=()=>{ let r=document.getElementById('printRoot'); if(!r){ r=document.createElement('div'); r.id='printRoot'; document.body.appendChild(r); } r.innerHTML=sheetHTML(); window.print(); };
+  const rp=$('#btnRepub'); if(rp) rp.onclick=()=>{ const b=$('#btnPublish'); if(b) b.click(); };
   const pb=$('#btnPublish'); if(pb) pb.onclick=async()=>{ pb.disabled=true; await flushCells(); act('publish',{mois:K(S.y,S.m,1).slice(0,7)},'Planning publié, les agents sont prévenus.'); };
   // demandes
   $$('[data-valid]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await flushCells(); act('decideRequest',{id:b.dataset.valid, accept:true},'Demande validée, planning mis à jour.'); });
